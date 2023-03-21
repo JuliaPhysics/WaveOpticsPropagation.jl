@@ -19,8 +19,8 @@ Aims of this package:
 * Differentiable
 
 
-[CI-img]: https://github.com/JuliaPhysics/WaveOpticsPropagation.jl/actions/workflows/ci.yml/badge.svg
-[CI-url]: https://github.com/JuliaPhysics/WaveOpticsPropagation.jl/actions/workflows/ci.yml
+[CI-img]: https://github.com/JuliaPhysics/WaveOpticsPropagation.jl/actions/workflows/CI.yml/badge.svg
+[CI-url]: https://github.com/JuliaPhysics/WaveOpticsPropagation.jl/actions/workflows/CI.yml
 
 [codecov-img]: https://codecov.io/gh/JuliaPhysics/WaveOpticsPropagation.jl/branch/main/graph/badge.svg?token=6XWI1M1MPB
 [codecov-url]: https://codecov.io/gh/JuliaPhysics/WaveOpticsPropagation.jl
