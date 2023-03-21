@@ -3,6 +3,10 @@ export set_center!
 export pad
 
 
+@inline hann(x) = sinpi(x/2)^2
+@inline smooth_f(x, α, β) = hann(scale(x, α, β))
+@inline scale(x, α, β) = clamp.(1 .-(x.-α)./(β .- α), 0, 1)
+
 """
     get_indices_around_center(i_in, i_out)
 
@@ -109,7 +113,7 @@ julia> crop_center([1 2; 3 4], (2,2))
  3  4
 ```
 """
-function crop_center(arr, new_size::NTuple{N}) where {T, N}
+function crop_center(arr, new_size::NTuple{N}) where {N}
     M = ndims(arr)
     @assert N ≤ M "Can't specify more dimensions than the array has."
     @assert all(new_size .≤ size(arr)[1:N]) "You can't extract a larger array than the input array."
