@@ -56,7 +56,13 @@ end
 """
     pad(arr::AbstractArray{T, N}, M; value=zero(T))
 
-Pads `arr` with `values` around such that the resulting array size is `round(Int, M .* size(arr)).
+Pads `arr` with `values` around such that the resulting array size is `round(Int, M .* size(arr))`.
+If `M isa Integer`, no rounding is needed.
+
+
+!!! warn "Automatic Differentation"
+    If `M isa AbstractFloat`, automatic differentation might fail because of size failures
+
 
 See also [`crop_center`](@ref), [`set_center!`](@ref).
 
@@ -69,10 +75,9 @@ julia> pad(ones((2,2)), 2)
  0.0  0.0  0.0  0.0
 ```
 """
-function pad(arr::AbstractArray{T, N}, M::Integer; value=zero(T)) where {T, N}
-    pad(arr, round.(Ref(Int), round.(Int, size(arr) .* M)), value=value)
+function pad(arr::AbstractArray{T, N}, M::Number; value=zero(T)) where {T, N}
+    pad(arr, round.(Int, size(arr) .* M), value=value)
 end
-
 
 
 """
@@ -104,7 +109,8 @@ julia> crop_center([1 2; 3 4], (2,2))
  3  4
 ```
 """
-function crop_center(arr::AbstractArray{T, M}, new_size::NTuple{N}) where {T, N, M}
+function crop_center(arr, new_size::NTuple{N}) where {T, N}
+    M = ndims(arr)
     @assert N ≤ M "Can't specify more dimensions than the array has."
     @assert all(new_size .≤ size(arr)[1:N]) "You can't extract a larger array than the input array."
     @assert Base.require_one_based_indexing(arr) "Require one based indexing arrays"
@@ -200,4 +206,24 @@ function set_center!(arr_large::AbstractArray{T, N}, arr_small::AbstractArray{T1
 
     
     return arr_large
+end
+
+function ChainRulesCore.rrule(::typeof(crop_center), arr, new_size::NTuple{N, <:Int}) where N
+    y = crop_center(arr, new_size) 
+    function crop_center_pullback(ȳ)
+        c̄ = pad(ȳ, size(arr), value=zero(eltype(arr)))
+        return NoTangent(), c̄, NoTangent()
+    end
+    return y, crop_center_pullback
+end
+
+
+function ChainRulesCore.rrule(::typeof(pad), arr, M::Union{NTuple, Number}; value=zero(eltype(arr)))
+    y = pad(arr, M; value=value) 
+    function pad_pullback(ȳ)
+        @assert size(y) == size(ȳ)
+        p̄ = crop_center(ȳ, size(arr))
+        return NoTangent(), p̄, NoTangent()
+    end
+    return y, pad_pullback
 end
