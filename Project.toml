@@ -1,0 +1,19 @@
+name = "WaveOpticsPropagation"
+uuid = "c4c7a1f9-3adc-4a73-843a-d378b6c86436"
+authors = ["Felix Wechsler (roflmaostc) <fxw+git@mailbox.org>"]
+version = "0.1.0-DEV"
+
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+
+[compat]
+julia = "1.8"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
