@@ -1,4 +1,11 @@
 # WaveOpticsPropagation.jl
+
+
+
+| **Build Status**                          | **Code Coverage**               |
+|:-----------------------------------------:|:-------------------------------:|
+| [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
+
 Propagate waves efficiently, optically, physically, differentiably with [Julia Lang](https://julialang.org/).
 
 
@@ -6,10 +13,14 @@ Aims of this package:
 
 * Propagate (electrical) fields based on wave propagation
 * Propagations
-    [ ] Angular Spectrum
-    [ ] Fresnel Propagation with Scaling Behaviour
+    * [ ] Angular Spectrum
+    * [ ] Fresnel Propagation with Scaling Behaviour
 * CUDA support
 * Differentiable
 
-[![Build Status](https://github.com/roflmaostc/WaveOpticsPropagation.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/roflmaostc/WaveOpticsPropagation.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/roflmaostc/WaveOpticsPropagation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/roflmaostc/WaveOpticsPropagation.jl)
+
+[CI-img]: https://github.com/JuliaPhysics/WaveOpticsPropagation.jl/actions/workflows/ci.yml/badge.svg
+[CI-url]: https://github.com/JuliaPhysics/WaveOpticsPropagation.jl/actions/workflows/ci.yml
+
+[codecov-img]: https://codecov.io/gh/JuliaPhysics/WaveOpticsPropagation.jl/branch/main/graph/badge.svg?token=6XWI1M1MPB
+[codecov-url]: https://codecov.io/gh/JuliaPhysics/WaveOpticsPropagation.jl
