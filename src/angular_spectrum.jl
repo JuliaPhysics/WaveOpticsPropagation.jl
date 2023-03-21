@@ -119,15 +119,15 @@ function Angular_Spectrum(field::Matrix{T}, z, λ, L;
             end
 	    end
     
-        p = plan_fft(field_new)
+        p = plan_fft!(field_new)
         HW = H .* W
     
         return Angular_Spectrum2{typeof(HW), typeof(L), typeof(p)}(HW, L, p, padding, pad_factor)
     end
 
 
-function (as::Angular_Spectrum2)(field)
-    field_new = as.padding ? pad(field, as.pad_factor) : field
+function (as::Angular_Spectrum2)(field; do_first_padding=true)
+    field_new = as.padding && do_first_padding ? pad(field, as.pad_factor) : field
 	field_out = fftshift(inv(as.p) * ((as.p * ifftshift(field_new)) .* as.HW))
     field_out_cropped = as.padding ? crop_center(field_out, size(field)) : field_out
 end
