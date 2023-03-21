@@ -38,7 +38,7 @@ function angular_spectrum(field::Matrix{T}, z, λ, L;
 	field_new = padding ? pad(field, pad_factor) : field
 	
 	# helpful propagation variables
-	(; k, f_x, f_y) = _propagation_variables(field_new, λ, L_new)
+	(; k, f_x, f_y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
 	
 	# transfer function kernel of angular spectrum
 	H = exp.(1im .* k .* z .* sqrt.(T(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
@@ -69,15 +69,17 @@ function angular_spectrum(field::Matrix{T}, z, λ, L;
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
 	
 	# return final field and some other variables
-	return field_out_cropped; (; L)
+	return field_out_cropped
 end
 
 
+ # highly optimized version with pre-planning
 
 
-
-struct Angular_Spectrum2{A, T, P}
+struct Angular_Spectrum3{A, T, P}
     HW::A
+    buffer::A
+    buffer2::A
     L::T
     p::P
     padding::Bool
@@ -119,21 +121,33 @@ function Angular_Spectrum(field::Matrix{T}, z, λ, L;
             end
 	    end
     
-        p = plan_fft!(field_new)
-        HW = H .* W
+        buffer = similar(field_new)
+        p = plan_fft!(buffer)
+        H .= H .* W
     
-        return Angular_Spectrum2{typeof(HW), typeof(L), typeof(p)}(HW, L, p, padding, pad_factor)
+        return Angular_Spectrum3{typeof(H), typeof(L), typeof(p)}(H, buffer, field_new, L, p, padding, pad_factor)
     end
 
 
-function (as::Angular_Spectrum2)(field; do_first_padding=true)
-    field_new = as.padding && do_first_padding ? pad(field, as.pad_factor) : field
-	field_out = fftshift(inv(as.p) * ((as.p * ifftshift(field_new)) .* as.HW))
-    field_out_cropped = as.padding ? crop_center(field_out, size(field)) : field_out
+function (as::Angular_Spectrum3)(field; do_padding=true)
+    field_new = (as.padding && do_padding) ? set_center!(as.buffer2, field) : field
+    field_imd = as.p * ifftshift!(as.buffer, field_new)
+    field_imd .*= as.HW
+	field_out = fftshift!(as.buffer2, inv(as.p) * field_imd)
+    field_out_cropped = (as.padding && do_padding) ? crop_center(field_out, size(field)) : field_out
+    return field_out_cropped; (; L)
 end
 
 
 
-const Angular_Spectrum = Angular_Spectrum2
 
-
+function angular_spectrum_2(field, z, λ, L, 
+                          padding=true, pad_factor=2,
+                          bandlimit=true,
+                          bandlimit_border=(0.8, 1))
+    L_new = padding ? pad_factor .* L : L
+    field_new = padding ? pad(field, pad_factor) : field
+    field_out = Angular_Spectrum(field_new, z, λ, L_new, padding=false, bandlimit=bandlimit, bandlimit_border=bandlimit_border)(field_new, do_padding=false)
+    field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
+    return field_out_cropped; (; L)
+end
