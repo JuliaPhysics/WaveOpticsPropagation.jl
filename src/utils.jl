@@ -3,9 +3,9 @@ export set_center!
 export pad
 
 
-@inline hann(x) = sinpi(x/2)^2
-@inline smooth_f(x, α, β) = hann(scale(x, α, β))
-@inline scale(x, α, β) = clamp.(1 .-(x.-α)./(β .- α), 0, 1)
+hann(x) = sin(π * x / 2)^2
+scale(x, α, β) = clamp(1 - (x - α) / (β - α), 0, 1)
+smooth_f(x, α, β) = hann(scale(x, α, β))
 
 """
     get_indices_around_center(i_in, i_out)

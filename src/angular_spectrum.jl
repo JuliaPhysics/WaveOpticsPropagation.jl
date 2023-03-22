@@ -1,6 +1,56 @@
 export angular_spectrum
 export Angular_Spectrum
 
+
+function _prepare_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L; 
+                          padding=true, pad_factor=2,
+                          bandlimit=true,
+                          bandlimit_border=(0.8, 1.0)) where {CT<:Complex}
+
+    fftdims = (1,2)
+    T = real(CT)
+    z, λ = T.((z, λ))
+    L = T.(L isa Number ? (L, L) : L)
+
+    # note that this implementation differs from `Angular_Spectrum` quite a bit
+    # this one works out-of-the-box with Zygote
+    # this other one is trimmed for performance and buffers and hence we need to make manual
+    # effort to get it work with Zygote
+    bandlimit_border = real(CT).(bandlimit_border)
+    L_new = padding ? pad_factor .* L : L
+
+	# applies zero padding
+	field_new = padding ? pad(field, pad_factor) : field
+	
+	# helpful propagation variables
+	(; k, f_x, f_y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
+	
+	# transfer function kernel of angular spectrum
+    H = exp.(1im .* k .* z .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
+	
+	# bandlimit according to Matsushima
+	# as addition we introduce a smooth bandlimit with a Hann window
+	# and fuzzy logic 
+	Δu =   1 ./ L_new
+	u_limit = 1 ./ (sqrt.((2 .* Δu .* z).^2 .+ 1) .* λ)
+	
+    W = let
+        if bandlimit
+	        # bandlimit filter
+	        # smoothing at 0.8 is arbitrary but works well
+            W = .*(hann.(scale.(abs2.(f_y) ./ u_limit[1]^2 .+ abs2.(f_x) * λ^2, 
+                                bandlimit_border[1], bandlimit_border[2])),
+                   hann.(scale.(abs2.(f_x) ./ u_limit[2]^2 .+ abs2.(f_y) * λ^2, 
+                             bandlimit_border[1], bandlimit_border[2])))
+        else
+            T(1)
+        end
+	end
+
+    return (;field_new, H, W, fftdims)
+end
+
+
 """
     angular_spectrum(field, z, λ, L; kwargs...)
 
@@ -30,46 +80,11 @@ This method is efficient but to avoid recalculating some arrays (such as the pha
 function angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L; 
                           padding=true, pad_factor=2,
                           bandlimit=true,
-                          bandlimit_border=(0.8, 1)) where CT
+                          bandlimit_border=(0.8, 1.0)) where {CT<:Complex}
    
-    fftdims = (1,2)
 
-    z, λ, L = real.(CT).((z, λ, L))
-    # note that this implementation differs from `Angular_Spectrum` quite a bit
-    # this one works out-of-the-box with Zygote
-    # this other one is trimmed for performance and buffers and hence we need to make manual
-    # effort to get it work with Zygote
-    bandlimit_border = real(CT).(bandlimit_border)
-    L_new = padding ? pad_factor .* L : L
-
-	# applies zero padding
-	field_new = padding ? pad(field, pad_factor) : field
-	
-	# helpful propagation variables
-	(; k, f_x, f_y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
-	
-	# transfer function kernel of angular spectrum
-	H = exp.(1im .* k .* z .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
-	
-	# bandlimit according to Matsushima
-	# as addition we introduce a smooth bandlimit with a Hann window
-	# and fuzzy logic 
-	Δu =   1 / L_new
-	u_limit = 1 / (sqrt((2 * Δu * z)^2 + 1) * λ)
-	f_x_limit = sqrt(inv(1/u_limit^2 + λ^2))
-	
-    W = let
-        if bandlimit
-	        # bandlimit filter
-	        # smoothing at 0.8 is arbitrary but works well
-	        W = .*(smooth_f.(abs2.(f_y) ./ u_limit^2 .+ abs2.(f_x) * λ^2, 
-                             bandlimit_border[1], bandlimit_border[2]),
-	        	   smooth_f.(abs2.(f_x) ./ u_limit^2 .+ abs2.(f_y) * λ^2, 
-                             bandlimit_border[1], bandlimit_border[2]))
-        else
-            CT(1)
-        end
-	end
+    (; field_new, H, W, fftdims) = _prepare_angular_spectrum(field, z, λ, L; padding, 
+                                              pad_factor, bandlimit, bandlimit_border)
 
 	# propagate field
 	field_out = fftshift(ifft(fft(ifftshift(field_new, fftdims), fftdims) .* H .* W, fftdims), fftdims)
@@ -77,8 +92,11 @@ function angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
 	
 	# return final field and some other variables
-	return field_out_cropped
+    return field_out_cropped, (; L)
 end
+
+
+angular_spectrum(field::AbstractArray, z, λ, L; kwargs...) = throw(ArgumentError("Provided field needs to have a complex elementype"))
 
 
  # highly optimized version with pre-planning
@@ -124,43 +142,15 @@ function Angular_Spectrum(field::AbstractArray{CT, 2}, z, λ, L;
                           bandlimit=true,
                           bandlimit_border=(0.8, 1)) where CT
    
-        # avoid wrong numerical types in the helpers
-        z, λ, L = real.(CT).((z, λ, L))
-        bandlimit_border = real(CT).(bandlimit_border)
-        L_new = padding ? pad_factor .* L : L
-	    field_new = padding ? pad(field, pad_factor) : field
-	    
-	    # helpful propagation variables
-	    (; k, f_x, f_y) = _propagation_variables(field_new, λ, L_new)
-	    
-	    # transfer function kernel of angular spectrum
-	    H = exp.(1im .* k .* z .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
-	    
-	    # bandlimit according to Matsushima
-	    # as addition we introduce a smooth bandlimit with a Hann window
-	    # and fuzzy logic 
-	    Δu =   1 / L_new
-	    u_limit = 1 / (sqrt((2 * Δu * z)^2 + 1) * λ)
-	    f_x_limit = sqrt(inv(1/u_limit^2 + λ^2))
-	    
-        W = let
-            if bandlimit
-	            # bandlimit filter
-	            # smoothing at 0.8 is arbitrary but works well
-	            W = .*(smooth_f.(abs2.(f_y) ./ u_limit^2 .+ abs2.(f_x) * λ^2, 
-                                 bandlimit_border[1], bandlimit_border[2]),
-	            	   smooth_f.(abs2.(f_x) ./ u_limit^2 .+ abs2.(f_y) * λ^2, 
-                                 bandlimit_border[1], bandlimit_border[2]))
-            else
-                CT(1)
-            end
-	    end
+        (; field_new, H, W, fftdims) = _prepare_angular_spectrum(field, z, λ, L; padding, 
+                                              pad_factor, bandlimit, bandlimit_border)
     
         buffer = similar(field_new)
         p = plan_fft!(buffer)
         H .= H .* W
-    
-        return Angular_Spectrum3{typeof(H), typeof(L), typeof(p)}(H, buffer, field_new, L, p, padding, pad_factor)
+        HW = H
+        
+        return Angular_Spectrum3{typeof(H), typeof(L), typeof(p)}(HW, buffer, field_new, L, p, padding, pad_factor), L
     end
 
 """

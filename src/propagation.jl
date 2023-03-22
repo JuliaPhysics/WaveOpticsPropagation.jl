@@ -20,15 +20,15 @@ function _propagation_variables(field::AbstractArray{T, M}, λ::Number, L::NTupl
 	# frequencies centered around first entry 
 	# 1D vectors each
 	f_y = similar(field, real(eltype(field)), (Ns[1], 1))
-	f_y .= fftfreq(Ns[2], Lf[2])
+	f_y .= fftfreq(Ns[1], Lf[1])
 	f_x = similar(field, real(eltype(field)), (1, Ns[2]))
-	f_x .= fftfreq(Ns[2], Lf[1])'
+	f_x .= fftfreq(Ns[2], Lf[2])'
 	
 	# y and x positions in real space, use correct spacing -> fftpos
 	y = similar(field, real(eltype(field)), (Ns[1], 1))
-	y .= ifftshift(fftpos(L[1], Ns[1], CenterFT))
+	y .= (fftpos(L[1], Ns[1], CenterFT))
 	x = similar(field, real(eltype(field)), (1, Ns[2]))
-	x .= ifftshift(fftpos(L[1], Ns[2], CenterFT))'
+	x .= (fftpos(L[2], Ns[2], CenterFT))'
 	
 	return (; k, dx, df, f_x, f_y, x, y)
 end
