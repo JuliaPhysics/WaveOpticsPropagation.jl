@@ -10,5 +10,6 @@ using FourierTools
 include("utils.jl")
 include("propagation.jl")
 include("angular_spectrum.jl")
+include("beams.jl")
 
 end
