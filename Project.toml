@@ -17,7 +17,7 @@ CUDA = "4"
 ChainRulesCore = "1"
 EllipsisNotation = "1"
 FFTW = "1"
-FourierTools = "0.4"
+FourierTools = "0.4.1"
 NDTools = "0.5"
 Zygote = "0.6"
 julia = "1.8"
@@ -25,8 +25,10 @@ julia = "1.8"
 [extras]
 ChainRulesTestUtils = "cdddcdb0-9152-4a09-a978-84456f9df70a"
 IndexFunArrays = "613c443e-d742-454e-bfc6-1d7f8dd76566"
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Test", "ChainRulesTestUtils", "Zygote", "IndexFunArrays"]
+test = ["Test", "ChainRulesTestUtils", "Zygote", "IndexFunArrays", "Markdown", "InteractiveUtils"]
