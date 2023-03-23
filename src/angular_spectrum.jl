@@ -57,7 +57,7 @@ end
 Returns the electrical field with physical length `L` and wavelength `λ` propagated with the angular spectrum 
 method of plane waves (AS) by the propagation distance `z`.
 
-This method is efficient but to avoid recalculating some arrays (such as the phase kernel), see [`Angular_Spectrum`](@ref) 
+This method is efficient but to avoid recalculating some arrays (such as the phase kernel), see [`Angular_Spectrum`](@ref). 
 
 # Arguments
 * `field`: Input field
