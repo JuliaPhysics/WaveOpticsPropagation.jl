@@ -6,10 +6,13 @@ using ChainRulesCore
 using Zygote
 using NDTools
 using FourierTools
+using IndexFunArrays
+using CUDA
 
 include("utils.jl")
 include("propagation.jl")
 include("angular_spectrum.jl")
 include("beams.jl")
+include("conv.jl")
 
 end
