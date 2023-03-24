@@ -2,6 +2,10 @@ export angular_spectrum
 export Angular_Spectrum
 
 
+_transform_z(::Type{T}, z::Number) where {T<:Number} = T(z)
+_transform_z(::Type{T}, z::AbstractArray{T}) where T = reshape(z, 1, 1, :)
+_transform_z(::Type{T}, z::AbstractArray{T2}) where {T, T2} = reshape(T.(z), 1, 1, :)
+
 function _prepare_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L; 
                           padding=true, pad_factor=2,
                           bandlimit=true,
@@ -9,7 +13,8 @@ function _prepare_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
 
     fftdims = (1,2)
     T = real(CT)
-    z, λ = T.((z, λ))
+    λ = T(λ)
+    z = _transform_z(T, z)
     L = T.(L isa Number ? (L, L) : L)
 
     # note that this implementation differs from `Angular_Spectrum` quite a bit
@@ -37,13 +42,17 @@ function _prepare_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
     W = let
         if bandlimit
 	        # bandlimit filter
-	        # smoothing at 0.8 is arbitrary but works well
-            W = .*(hann.(scale.(abs2.(f_y) ./ u_limit[1]^2 .+ abs2.(f_x) * λ^2, 
+            u_limit1 = u_limit isa AbstractArray ? u_limit[1:1, ..] : u_limit[1] 
+            u_limit2 = u_limit isa AbstractArray ? u_limit[2:2, ..] : u_limit[2] 
+
+            W = .*(hann.(scale.(abs2.(f_y) ./ u_limit1 .^2 .+ abs2.(f_x) * λ^2, 
                                 bandlimit_border[1], bandlimit_border[2])),
-                   hann.(scale.(abs2.(f_x) ./ u_limit[2]^2 .+ abs2.(f_y) * λ^2, 
+                   hann.(scale.(abs2.(f_x) ./ u_limit2 .^2 .+ abs2.(f_y) * λ^2, 
                              bandlimit_border[1], bandlimit_border[2])))
         else
-            T(1)
+            # use an array here too, to avoid type instabilities
+            W = similar(field, real(eltype(field)), size(f_y, 1), size(f_x, 1))
+            W .= 1
         end
 	end
 
@@ -87,12 +96,12 @@ function angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
                                               pad_factor, bandlimit, bandlimit_border)
 
 	# propagate field
-	field_out = fftshift(ifft(fft(ifftshift(field_new, fftdims), fftdims) .* H .* W, fftdims), fftdims)
+	field_out = fftshift(ifft!(fft!(ifftshift(field_new, fftdims), fftdims) .* H .* W, fftdims), fftdims)
 	
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
 	
 	# return final field and some other variables
-    return field_out_cropped, (; L)
+    return field_out_cropped, (; H, L)
 end
 
 
