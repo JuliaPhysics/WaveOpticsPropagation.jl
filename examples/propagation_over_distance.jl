@@ -50,19 +50,22 @@ end
 N = 256
 
 # ╔═╡ 7ef68ddb-474d-49ea-9510-91c0ab4d073d
-field_img = togoc(ComplexF32.((rr2(Float32, (N, N), offset=(120, 200)) .< 10^2) .+ (rr2(Float32, (N, N), offset=(100, 100)) .< 40^2) .+ (rr2(Float32, (N, N), offset=(120, 170)) .< 5^2) ));
+field_img = togoc(ComplexF32.((rr2(Float32, (N, N), offset=(120, 200)) .< 10^2) .+ (rr2(Float32, (N, N), offset=(100, 100)) .< 40^2) .+ (rr2(Float32, (N, N), offset=(120, 170)) .< 3^2) ));
 
 # ╔═╡ e5fcbd81-c4f5-4bbc-8f22-dd248be8ec01
-L = 1f-3
+L = 2f-3
 
 # ╔═╡ 92d96248-06e5-446b-b856-163cbe8b4f45
-
+L / N
 
 # ╔═╡ da4d0740-46c4-460a-83ef-d78db575a3a4
 λ = 405f-9 / 1.5
 
 # ╔═╡ 182fd5d8-857c-44d2-9451-8b6e8a9114e9
-zs = togoc(range(-5e-3, 5e-3, 256));
+zs = togoc(fftpos(16e-3, 256, CenterFT));
+
+# ╔═╡ 38041742-1d46-4fa3-97b4-e5614f39ac33
+CUDA.@allowscalar zs[129]
 
 # ╔═╡ 851accf9-ea26-41f7-a2a5-4f0b9e53ad9c
 @mytime field_img_p, tt = angular_spectrum(togoc(field_img), zs, λ, L);
@@ -78,8 +81,8 @@ simshow((toc(abs2.(selectdim(field_img_p, 3, iz)))), γ=0.5)
 
 # ╔═╡ 4218847d-9a0c-4e4e-a8b6-6c76e0c3564e
 begin
-	plot(fftpos(L, N, CenterFT), abs2.(toc(selectdim(field_img_p, 3, iz)))[120, :], title="z=$(1000 * toc(zs)[iz])mm", ticks=:native)
-	plot!(fftpos(L, N, CenterFT), abs2.(toc(field_img)[120, :]))
+	plot(fftpos(L, N, CenterFT), abs2.(toc(selectdim(field_img_p, 3, iz)))[120, :], title="z=$(1000 * toc(zs)[iz])mm", ticks=:native, marker=(:circle,1))
+	plot!(fftpos(L, N, CenterFT), abs2.(toc(field_img)[120, :]), marker=(:circle,1))
 end
 
 # ╔═╡ 5fb47911-28b4-456c-b647-eed4af09f5e3
@@ -88,44 +91,14 @@ sum(abs2.(field_img_p[:, :, 2]))
 # ╔═╡ a7325c95-d653-4e7e-ad9c-736a50ba9ea8
 sum(abs2.(field_img))
 
-# ╔═╡ a8fb4cfa-61c1-4477-a4e8-af6f8e631a7e
-# ╠═╡ disabled = true
-#=╠═╡
-@mytime rs_kernel = WaveOpticsPropagation._real_space_kernel(pad(field_img, 2), togoc(reshape(range(10e-6, 1000e-6, 100), (1,1,:))), 405e-9, 4e-3);
-  ╠═╡ =#
-
-# ╔═╡ 4f585a19-fd50-40d3-8e60-27ebf080bce6
-# ╠═╡ disabled = true
-#=╠═╡
-field_img_conv= WaveOpticsPropagation.conv(field_img, ifftshift(rs_kernel));
-  ╠═╡ =#
-
 # ╔═╡ 03002431-9a33-4a6b-bb1a-d30f47c3bb45
 
 
-# ╔═╡ 94e1e172-a807-44cf-8f3f-b98262f3f895
-#=╠═╡
-simshow(toc(abs2.(selectdim(field_img_conv, 3, iz))), γ=0.1)
-  ╠═╡ =#
-
-# ╔═╡ 6dc5b732-f121-465a-9dd9-fdf27fb73e90
-simshow(ffts(toc(selectdim(tt.H, 3, iz))), γ=1)
-
-# ╔═╡ 09954458-5659-46e2-9711-cae7dfac8e36
-# ╠═╡ disabled = true
-#=╠═╡
-@view_image real.(ffts(toc(selectdim(tt.H, 3, iz))))
-  ╠═╡ =#
-
 # ╔═╡ 5bb71ea0-cf7d-4be9-8df3-4d8bdab830d3
-#=╠═╡
 simshow(togoc(selectdim(rs_kernel, 3, iz)), γ=0.1)
-  ╠═╡ =#
 
 # ╔═╡ 9cd1b7fd-d262-4ccc-8a2c-b82f0368ce35
-#=╠═╡
 extrema(abs2.(rs_kernel))
-  ╠═╡ =#
 
 # ╔═╡ 1b1144fe-b732-40bc-8382-727381f69b85
 size(field_img)
@@ -195,12 +168,14 @@ NDTools.expand_dims
 # ╠═e5fcbd81-c4f5-4bbc-8f22-dd248be8ec01
 # ╠═92d96248-06e5-446b-b856-163cbe8b4f45
 # ╠═da4d0740-46c4-460a-83ef-d78db575a3a4
+# ╠═38041742-1d46-4fa3-97b4-e5614f39ac33
 # ╠═182fd5d8-857c-44d2-9451-8b6e8a9114e9
 # ╠═851accf9-ea26-41f7-a2a5-4f0b9e53ad9c
 # ╠═62acd577-3402-4aee-9c62-4cc424b61758
 # ╠═f9837f4a-e134-4d92-8984-51836bb89f74
 # ╠═ddbe7f52-57dc-42d5-9edc-6377eb0bf31d
 # ╠═4218847d-9a0c-4e4e-a8b6-6c76e0c3564e
+# ╠═0d275418-1393-41c4-b29a-6b56cb25f728
 # ╠═5fb47911-28b4-456c-b647-eed4af09f5e3
 # ╠═a7325c95-d653-4e7e-ad9c-736a50ba9ea8
 # ╠═a8fb4cfa-61c1-4477-a4e8-af6f8e631a7e
