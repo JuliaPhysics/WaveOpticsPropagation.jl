@@ -91,6 +91,7 @@ function angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
                           bandlimit=true,
                           bandlimit_border=(0.8, 1.0)) where {CT<:Complex}
    
+    @assert size(field, 1) == size(field, 2) "input field needs to be quadradically shaped and not $(size(field, 1)), $(size(field, 2))"
 
     (; field_new, H, W, fftdims) = _prepare_angular_spectrum(field, z, λ, L; padding, 
                                               pad_factor, bandlimit, bandlimit_border)
