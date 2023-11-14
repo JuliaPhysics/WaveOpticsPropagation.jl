@@ -17,10 +17,6 @@ function _prepare_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
     z = _transform_z(T, z)
     L = T.(L isa Number ? (L, L) : L)
 
-    # note that this implementation differs from `Angular_Spectrum` quite a bit
-    # this one works out-of-the-box with Zygote
-    # this other one is trimmed for performance and buffers and hence we need to make manual
-    # effort to get it work with Zygote
     bandlimit_border = real(CT).(bandlimit_border)
     L_new = padding ? pad_factor .* L : L
 
@@ -97,7 +93,7 @@ function angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
                                               pad_factor, bandlimit, bandlimit_border)
 
 	# propagate field
-	field_out = fftshift(ifft!(fft!(ifftshift(field_new, fftdims), fftdims) .* H .* W, fftdims), fftdims)
+	field_out = fftshift(ifft(fft(ifftshift(field_new, fftdims), fftdims) .* H .* W, fftdims), fftdims)
 	
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
 	
@@ -170,10 +166,29 @@ Uses the struct to efficiently store some pre-calculated objects.
 Propagate the field.
 """
 function (as::Angular_Spectrum3)(field)
+    fill!(as.buffer2, 0)
     field_new = as.padding ? set_center!(as.buffer2, field) : field
     field_imd = as.p * ifftshift!(as.buffer, field_new)
     field_imd .*= as.HW
 	field_out = fftshift!(as.buffer2, inv(as.p) * field_imd)
     field_out_cropped = as.padding ? crop_center(field_out, size(field)) : field_out
-    return field_out_cropped; (; L)
+    return field_out_cropped, (; as.L)
+end
+
+
+function ChainRulesCore.rrule(as::Angular_Spectrum3, field)
+    field_and_tuple = as(field) 
+    function as_pullback(ȳ)
+        f̄ = NoTangent()
+        y2 = ȳ.backing[1] 
+    
+        fill!(as.buffer2, 0)
+        field_new = as.padding ? set_center!(as.buffer2, y2) : y2 
+        field_imd = as.p * ifftshift!(as.buffer, field_new)
+        field_imd .*= conj.(as.HW)
+        field_out = fftshift!(as.buffer2, inv(as.p) * field_imd)
+        field_out_cropped = as.padding ? crop_center(field_out, size(field)) : field_out
+        return f̄, field_out_cropped 
+    end
+    return field_and_tuple, as_pullback
 end

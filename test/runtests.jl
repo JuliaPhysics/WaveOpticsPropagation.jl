@@ -3,6 +3,7 @@ using Test
 using Zygote
 using ChainRulesTestUtils
 using IndexFunArrays, NDTools, FourierTools
+using FiniteDifferences
 
 @testset "WaveOpticsPropagation.jl" begin
     include("utils.jl")
