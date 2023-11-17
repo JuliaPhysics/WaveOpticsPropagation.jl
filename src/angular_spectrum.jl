@@ -6,7 +6,7 @@ _transform_z(::Type{T}, z::Number) where {T<:Number} = T(z)
 _transform_z(::Type{T}, z::AbstractArray{T}) where T = reshape(z, 1, 1, :)
 _transform_z(::Type{T}, z::AbstractArray{T2}) where {T, T2} = reshape(T.(z), 1, 1, :)
 
-function _prepare_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L; 
+function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L; 
                           padding=true, pad_factor=2,
                           bandlimit=true,
                           bandlimit_border=(0.8, 1.0)) where {CT<:Complex}
@@ -21,7 +21,12 @@ function _prepare_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
     L_new = padding ? pad_factor .* L : L
 
 	# applies zero padding
-	field_new = padding ? pad(field, pad_factor) : field
+    if ndims(field) == 2
+        pad_factor2 = pad_factor
+    elseif ndims(field) == 3
+        pad_factor2 = (pad_factor * size(field, 1), pad_factor * size(field, 2), size(field, 3))
+    end
+	field_new = padding ? pad(field, pad_factor2) : field
 	
 	# helpful propagation variables
 	(; k, f_x, f_y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
@@ -143,16 +148,16 @@ julia> as(field)
  -2.52505e-7+1.20063e-6im   8.57634e-7-4.05761e-6im   -0.00142377+0.000938398im   8.57634e-7-4.05761e-6im
 ```
 """
-function Angular_Spectrum(field::AbstractArray{CT, 2}, z, λ, L; 
+function Angular_Spectrum(field::AbstractArray{CT, N}, z, λ, L; 
                           padding=true, pad_factor=2,
                           bandlimit=true,
-                          bandlimit_border=(0.8, 1)) where CT
+                          bandlimit_border=(0.8, 1)) where {CT, N}
    
         (; field_new, H, W, fftdims) = _prepare_angular_spectrum(field, z, λ, L; padding, 
                                               pad_factor, bandlimit, bandlimit_border)
     
         buffer = similar(field_new)
-        p = plan_fft!(buffer)
+        p = plan_fft!(buffer, (1, 2))
         H .= H .* W
         HW = H
         
@@ -168,9 +173,9 @@ Propagate the field.
 function (as::Angular_Spectrum3)(field)
     fill!(as.buffer2, 0)
     field_new = as.padding ? set_center!(as.buffer2, field) : field
-    field_imd = as.p * ifftshift!(as.buffer, field_new)
+    field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
     field_imd .*= as.HW
-	field_out = fftshift!(as.buffer2, inv(as.p) * field_imd)
+    field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
     field_out_cropped = as.padding ? crop_center(field_out, size(field)) : field_out
     return field_out_cropped, (; as.L)
 end
@@ -184,9 +189,9 @@ function ChainRulesCore.rrule(as::Angular_Spectrum3, field)
     
         fill!(as.buffer2, 0)
         field_new = as.padding ? set_center!(as.buffer2, y2) : y2 
-        field_imd = as.p * ifftshift!(as.buffer, field_new)
+        field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
         field_imd .*= conj.(as.HW)
-        field_out = fftshift!(as.buffer2, inv(as.p) * field_imd)
+        field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
         field_out_cropped = as.padding ? crop_center(field_out, size(field)) : field_out
         return f̄, field_out_cropped 
     end
