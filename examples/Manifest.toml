@@ -2,7 +2,7 @@
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "e1fb4fcb730bba1edcff897380dbaba98c9ecab6"
+project_hash = "5adba9be67adc706c964b884ad91ae500b32e8e9"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -545,6 +545,12 @@ version = "2.21.1"
     BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
     BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
     StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[[deps.FiniteDifferences]]
+deps = ["ChainRulesCore", "LinearAlgebra", "Printf", "Random", "Richardson", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "d77e4697046989f44dce3ed66269aaf1611a3406"
+uuid = "26cc04aa-876d-5657-8c51-4c34ba976000"
+version = "0.12.31"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -1615,6 +1621,12 @@ deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibG
 git-tree-sha1 = "609c26951d80551620241c3d7090c71a73da75ab"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
 version = "3.5.6"
+
+[[deps.Richardson]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "48f038bfd83344065434089c2a79417f38715c41"
+uuid = "708f8203-808e-40c0-ba2d-98a6953ed40d"
+version = "1.4.2"
 
 [[deps.Rotations]]
 deps = ["LinearAlgebra", "Quaternions", "Random", "StaticArrays"]
