@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.30
 
 using Markdown
 using InteractiveUtils
@@ -31,8 +31,8 @@ using Plots, ImageShow
 """
 function double_slit(N, d, b, offset, z, λ, L)
 
-	slit_init = (box(ComplexF32, (20, N), (20, b), offset=(11, offset + N÷2 + 1 - d ÷2 )) .+  
-					   box(ComplexF32, (20, N), (20, b), offset=(11, offset + N÷2 + 1 + d ÷2 )))
+	slit_init = (box(ComplexF32, (N, N), (N, b), offset=(11, offset + N÷2 + 1 - d ÷2 )) .+  
+					   box(ComplexF32, (N, N), (N, b), offset=(11, offset + N÷2 + 1 + d ÷2 )))
 
 	xpos = fftpos(L, N, NDTools.CenterFT) .- offset .* L ./ N
 	sinθ = sin.(atan.(xpos, z))
@@ -41,7 +41,7 @@ function double_slit(N, d, b, offset, z, λ, L)
 	slit_ana = cos.(π .* d_m .* sinθ ./ λ).^2 .* sinc.(b_m .* sinθ ./ λ).^2
 
 	slit_prop = (angular_spectrum(slit_init, z, λ, L)[1])
-	slit_prop2 = (Angular_Spectrum(slit_init, z, λ, L)[1](slit_init))
+	slit_prop2 = (Angular_Spectrum(slit_init, z, λ, L)[1](slit_init))[1]
 	@test slit_prop2 ≈ slit_prop
 	
 	slit_prop = abs2.(slit_prop)

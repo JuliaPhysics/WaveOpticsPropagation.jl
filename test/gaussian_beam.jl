@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.30
 
 using Markdown
 using InteractiveUtils
@@ -46,10 +46,10 @@ function test_gauss_consistency(λ, L, N, z, z_init, w_0; do_test=true)
 end
 
 # ╔═╡ c732c1d7-6ae8-41ab-ae2e-d635fa9d66a3
-res1 = test_gauss_consistency(405f-9, (10f-4, 20.0f-4), (512, 511), 1f-2, 1f-10, 0.01f-3)
+res1 = test_gauss_consistency(405f-9, (10f-4, 20.0f-4), (512, 512), 1f-2, 1f-10, 0.01f-3)
 
 # ╔═╡ a5e7878f-4ea1-4f75-87f8-fafd09f5ad82
-res2 = test_gauss_consistency(10f-9, (1f-4, 0.5f-4), (400, 401), 0.02f-2, 0.05f-2, 0.003f-3, do_test = true)
+res2 = test_gauss_consistency(10f-9, (1f-4, 0.5f-4), (400, 400), 0.02f-2, 0.05f-2, 0.003f-3, do_test = true)
 
 # ╔═╡ 22e070fd-b27f-4cb2-8ad7-71f409e881bf
 # ╠═╡ skip_as_script = true
