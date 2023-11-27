@@ -202,7 +202,7 @@ sum(abs2, measurement_c .* diffuser_c)
 
 # ╔═╡ 2d6dadd6-57a8-4c98-bf12-56276cb4cffe
 CUDA.@time res = Optim.optimize(f, g!, rec0, ConjugateGradient(),
-                                 Optim.Options(iterations = 200,  
+                                 Optim.Options(iterations = 500,  
                                                store_trace=true, 
 								 f_abstol=1e-10,
 								 g_abstol=1e-10, ))
