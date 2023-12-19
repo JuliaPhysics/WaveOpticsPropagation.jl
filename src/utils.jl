@@ -113,7 +113,7 @@ julia> crop_center([1 2; 3 4], (2,2))
  3  4
 ```
 """
-function crop_center(arr, new_size::NTuple{N}) where {N}
+function crop_center(arr, new_size::NTuple{N}; return_view=true) where {N}
     M = ndims(arr)
     @assert N ≤ M "Can't specify more dimensions than the array has."
     @assert all(new_size .≤ size(arr)[1:N]) "You can't extract a larger array than the input array."
@@ -131,7 +131,11 @@ function crop_center(arr, new_size::NTuple{N}) where {N}
                           Val(M))
     
 
-    return @inbounds arr[out_indices...]
+    if return_view
+        return @inbounds @view arr[out_indices...]
+    else
+        return @inbounds arr[out_indices...]
+    end
 end
 
 

@@ -176,7 +176,7 @@ function (as::Angular_Spectrum3)(field)
     field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
     field_imd .*= as.HW
     field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
-    field_out_cropped = as.padding ? crop_center(field_out, size(field)) : field_out
+    field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
     return field_out_cropped, (; as.L)
 end
 
@@ -192,7 +192,7 @@ function ChainRulesCore.rrule(as::Angular_Spectrum3, field)
         field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
         field_imd .*= conj.(as.HW)
         field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
-        field_out_cropped = as.padding ? crop_center(field_out, size(field)) : field_out
+        field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
         return f̄, field_out_cropped 
     end
     return field_and_tuple, as_pullback
