@@ -156,12 +156,20 @@ function Angular_Spectrum(field::AbstractArray{CT, N}, z, λ, L;
         (; field_new, H, W, fftdims) = _prepare_angular_spectrum(field, z, λ, L; padding, 
                                               pad_factor, bandlimit, bandlimit_border)
     
-        buffer = similar(field_new)
+      
+        if z isa AbstractVector
+            buffer2 = similar(field, complex(eltype(field_new)), (size(field_new, 1), size(field_new, 2), length(z)))
+            buffer = copy(buffer2)
+        else
+            buffer2 = similar(field, complex(eltype(field_new)), (size(field_new, 1), size(field_new, 2)))
+            buffer = copy(buffer2)
+        end
+        
         p = plan_fft!(buffer, (1, 2))
         H .= H .* W
         HW = H
-        
-        return Angular_Spectrum3{typeof(H), typeof(L), typeof(p)}(HW, buffer, field_new, L, p, padding, pad_factor), L
+  
+        return Angular_Spectrum3{typeof(H), typeof(L), typeof(p)}(HW, buffer, buffer2, L, p, padding, pad_factor), L
     end
 
 """
@@ -172,7 +180,7 @@ Propagate the field.
 """
 function (as::Angular_Spectrum3)(field)
     fill!(as.buffer2, 0)
-    field_new = as.padding ? set_center!(as.buffer2, field) : field
+    field_new = set_center!(as.buffer2, field, broadcast=true)
     field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
     field_imd .*= as.HW
     field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
@@ -188,7 +196,7 @@ function ChainRulesCore.rrule(as::Angular_Spectrum3, field)
         y2 = ȳ.backing[1] 
     
         fill!(as.buffer2, 0)
-        field_new = as.padding ? set_center!(as.buffer2, y2) : y2 
+        field_new = as.padding ? set_center!(as.buffer2, y2, broadcast=true) : y2 
         field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
         field_imd .*= conj.(as.HW)
         field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
