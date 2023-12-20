@@ -131,11 +131,11 @@ function crop_center(arr, new_size::NTuple{N}; return_view=true) where {N}
                           Val(M))
     
 
-    if return_view
-        return @inbounds @view arr[out_indices...]
-    else
+    # if return_view
+        # return @inbounds view(arr, out_indices...)
+    # else
         return @inbounds arr[out_indices...]
-    end
+    # end
 end
 
 
