@@ -6,7 +6,7 @@ _transform_z(::Type{T}, z::Number) where {T<:Number} = T(z)
 _transform_z(::Type{T}, z::AbstractArray{T}) where T = reshape(z, 1, 1, :)
 _transform_z(::Type{T}, z::AbstractArray{T2}) where {T, T2} = reshape(T.(z), 1, 1, :)
 
-function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L; 
+function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
                           padding=true, pad_factor=2,
                           bandlimit=true,
                           bandlimit_border=(0.8, 1.0)) where {CT<:Complex}

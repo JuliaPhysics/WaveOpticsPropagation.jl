@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.30
+# v0.19.32
 
 using Markdown
 using InteractiveUtils
@@ -94,7 +94,7 @@ simshow(Array(AS_c(field_c[:, :, 2])[1]), γ=0.3)
 simshow(Array(abs2.(AS_c(field_c)[1])))
 
 # ╔═╡ 0180ea0b-87a8-4233-86fe-09308a70738d
-N = 10
+N = 7
 
 # ╔═╡ 1418e664-6207-4df4-aa79-f18633b63b2e
 begin
@@ -139,13 +139,13 @@ end
 simshow(Array(fwd(field_c)[2][:, :, 8]))
 
 # ╔═╡ d00e3c52-a25d-4f13-9f76-f9fb0e255737
-simshow(Array(AS_c(fwd(field_c)[1][:, :, 8])[1]))
+simshow(Array(AS_c(fwd(field_c)[1][:, :, 3])[1]))
 
 # ╔═╡ 86c47180-3afe-4545-912e-12911155a02a
-simshow(Array(diffuser_c)[:, :, 8])
+simshow(Array(diffuser_c)[:, :, 3])
 
 # ╔═╡ 2c6ec01e-df45-4482-9d52-ce04ed343c5d
-simshow(Array(AS_c2(diffuser_c)[1][:, :, 8]))
+simshow(Array(AS_c2(diffuser_c)[1][:, :, 7]))
 
 # ╔═╡ df218193-d0f0-4c85-9439-9b70e2e55cf8
 simshow(Array(diffuser_c)[:, :, 9])
@@ -203,7 +203,7 @@ sum(abs2, measurement_c .* diffuser_c)
 
 # ╔═╡ 2d6dadd6-57a8-4c98-bf12-56276cb4cffe
 CUDA.@time res = Optim.optimize(f, g!, rec0, ConjugateGradient(),
-                                 Optim.Options(iterations = 500,  
+                                 Optim.Options(iterations = 300,  
                                                store_trace=true, 
 								 f_abstol=1e-10,
 								 g_abstol=1e-10, ))
@@ -215,7 +215,7 @@ CUDA.@time res = Optim.optimize(f, g!, rec0, ConjugateGradient(),
 plot([t.iteration for t in res.trace], [t.value for t in res.trace], label="LBFGS", yaxis=:log)
 
 # ╔═╡ f252bf81-98d7-4383-9c29-fe4c2a034dc6
-simshow([Array(field_c[:, :, 1]) cispi(0.42) .* Array(res.minimizer)[:, :, 1]], γ=0.4)
+simshow([Array(field_c[:, :, 1]) cispi(0.39) .* Array(res.minimizer)[:, :, 1]], γ=0.4)
 
 # ╔═╡ df93cc2e-4031-4011-a1d6-d76c62fd3000
 simshow(Array(field_c[:, :, 2]))
