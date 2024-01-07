@@ -181,3 +181,36 @@ function (sas::ScalableAngularSpectrum)(ψ::AbstractArray{T}; return_view=false)
 	ψ_final = crop_center(sas.buffer2, size(ψ); return_view)
     return ψ_final, (; sas.L)
 end
+
+
+
+function ChainRulesCore.rrule(sas::ScalableAngularSpectrum, ψ::AbstractArray{T}) where T
+    field_and_tuple = (ψ) 
+    function sas_pullback(ȳ)
+        p = sas.FFTplan
+        y2 = ȳ#.backing[1] 
+        
+        fill!(sas.buffer2, 0)
+
+        set_center!(sas.buffer2, y2)
+        ifftshift!(sas.buffer, sas.buffer2)
+
+        if !isnothing(sas.H₂)
+            sas.buffer .*= (sas.H₂)
+        end
+	    sas.buffer .*= 1* (1im * T(sqrt(length(sas.buffer)))) 
+        
+        inv(p) * sas.buffer 
+        sas.buffer .*= conj.(sas.H₁)
+        p * sas.buffer
+        sas.buffer .*= conj.(sas.ΔH)
+        inv(p) * sas.buffer
+        fftshift!(sas.buffer2, sas.buffer)
+
+        final = crop_center(sas.buffer2, size(ψ)) 
+
+
+        return NoTangent(), final
+    end
+    return field_and_tuple, sas_pullback
+end

@@ -25,6 +25,9 @@ end
 # ╔═╡ aafab549-c977-48f4-9dba-9d693e439b44
 using WaveOpticsPropagation, CUDA, IndexFunArrays, NDTools, ImageShow, FileIO, Zygote, Optim, Plots, PlutoUI, FourierTools, NDTools
 
+# ╔═╡ fa7a9fad-978c-4ad1-b563-312d373762d9
+using FiniteDifferences
+
 # ╔═╡ 4aabd650-792c-407c-9590-e4960ac776d6
 md"# Setup Environment and packages"
 
@@ -144,6 +147,51 @@ The Fresnel number is $(round((D_box)^2 / z_box / λ, digits=3))
 # ╔═╡ 9e762dfc-4873-4fe3-b785-f6c4808417a6
 simshow(Array(abs2.(U_box_p)), γ=0.13, cmap=:inferno)
 
+# ╔═╡ 6f56e9aa-94c0-4276-ad5a-993c7e56f4f8
+field = zeros(ComplexF64, (32, 32))
+
+# ╔═╡ 646dd8d2-e882-4df3-ab86-58026142e4b4
+field[14:16, 14:16] .= 1
+
+# ╔═╡ 10efbf3e-d114-4360-b06a-f4d06c41b2ef
+ss = ScalableAngularSpectrum(cis.(field), 10e-6, 633e-9, 100e-6)
+
+# ╔═╡ 6c077e89-80ea-4e88-bb5c-c6dc4b0f3ad5
+gg(x) = sum(abs2.(x .- ss(cis.(x))[1]))
+
+# ╔═╡ 0f6a4efe-2412-423e-ab9f-49805edea0fa
+out2 = FiniteDifferences.grad(central_fdm(5, 1), gg, field)[1]
+
+# ╔═╡ 56919f31-0f57-479c-a02a-074e4c9cc5b8
+out1 = gradient(gg, field)[1]
+
+# ╔═╡ 904dec8e-2fbd-48fe-a19c-44a748cc597a
+Zygote.refresh()
+
+# ╔═╡ 8d6ea849-80f3-4070-a54b-7411478a64af
+sum(out1)
+
+# ╔═╡ 16f60370-3738-405a-97ae-7acd9723d540
+out1 .+ cis(1) ≈ out2  .+ cis(1)
+
+# ╔═╡ 792dd3ec-d6fd-45db-9717-2a99282c7c9a
+simshow(out2)
+
+# ╔═╡ 98f43db0-fa7c-4b63-bada-d4ee1329bd4d
+simshow(out1)
+
+# ╔═╡ 0f26ce9c-ba97-459a-856d-08ea20aef1c9
+ifftshift(out1, out1)
+
+# ╔═╡ 28852634-d347-4a35-afa8-73ea9529ef06
+x = [1 2 3; 4.1 5 6; 7 8 9]
+
+# ╔═╡ 6fa5a0d5-3c7c-45f4-aefc-e22430a5b080
+ifftshift(x)
+
+# ╔═╡ 83293c34-25bc-4605-aa0e-77c37c71b4e8
+ifftshift(x, x)
+
 # ╔═╡ Cell order:
 # ╟─4aabd650-792c-407c-9590-e4960ac776d6
 # ╠═1ea0729c-ad94-11ee-3b52-bb21d59e9509
@@ -180,3 +228,19 @@ simshow(Array(abs2.(U_box_p)), γ=0.13, cmap=:inferno)
 # ╠═38bc91ff-3188-4129-aa6b-2af458cf59b1
 # ╠═2b11c87d-4746-4be6-81f6-f004d30beae4
 # ╠═9e762dfc-4873-4fe3-b785-f6c4808417a6
+# ╠═fa7a9fad-978c-4ad1-b563-312d373762d9
+# ╠═6f56e9aa-94c0-4276-ad5a-993c7e56f4f8
+# ╠═646dd8d2-e882-4df3-ab86-58026142e4b4
+# ╠═10efbf3e-d114-4360-b06a-f4d06c41b2ef
+# ╠═6c077e89-80ea-4e88-bb5c-c6dc4b0f3ad5
+# ╠═0f6a4efe-2412-423e-ab9f-49805edea0fa
+# ╠═56919f31-0f57-479c-a02a-074e4c9cc5b8
+# ╠═904dec8e-2fbd-48fe-a19c-44a748cc597a
+# ╠═8d6ea849-80f3-4070-a54b-7411478a64af
+# ╠═16f60370-3738-405a-97ae-7acd9723d540
+# ╠═792dd3ec-d6fd-45db-9717-2a99282c7c9a
+# ╠═98f43db0-fa7c-4b63-bada-d4ee1329bd4d
+# ╠═0f26ce9c-ba97-459a-856d-08ea20aef1c9
+# ╠═28852634-d347-4a35-afa8-73ea9529ef06
+# ╠═6fa5a0d5-3c7c-45f4-aefc-e22430a5b080
+# ╠═83293c34-25bc-4605-aa0e-77c37c71b4e8
