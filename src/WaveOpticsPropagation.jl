@@ -12,6 +12,7 @@ using CUDA
 include("utils.jl")
 include("propagation.jl")
 include("angular_spectrum.jl")
+include("ScalableAngularSpectrum.jl")
 include("fraunhofer.jl")
 include("beams.jl")
 include("conv.jl")
