@@ -10,4 +10,4 @@ makedocs(modules = [WaveOpticsPropagation],
          warnonly=true,
         )
 
-deploydocs(repo = "github.com/roflmaostc/WaveOpticsPropagation.jl.git", devbranch="main")
+deploydocs(repo = "github.com/JuliaPhysics/WaveOpticsPropagation.jl.git", devbranch="main")
