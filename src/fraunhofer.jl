@@ -37,7 +37,7 @@ function fraunhofer(U, z, λ, L; skip_final_phase=true)
     	Zygote.@ignore y .= (fftpos(L, Ns[1], CenterFT))
     	x = similar(U, real(eltype(U)), (1, Ns[2]))
     	Zygote.@ignore x .= (fftpos(L, Ns[2], CenterFT))'
-        phasefactor = exp.(1im * k / (2 * z) .* (x.^2 .+ y.^2)) 
+        phasefactor = (-1im) .* exp.(1im * k / (2 * z) .* (x.^2 .+ y.^2)) 
         out = phasefactor .* fftshift(p * ifftshift(U)) ./ √(size(U, 1) * size(U, 2))
     end
     
@@ -66,7 +66,7 @@ function Fraunhofer(U, z, λ, L; skip_final_phase=true)
     	y .= (fftpos(L, Ns[1], CenterFT))
     	x = similar(U, real(eltype(U)), (1, Ns[2]))
     	x .= (fftpos(L, Ns[2], CenterFT))'
-        phasefactor = 1 / (1im * λ * z) .* exp.(1im * k / (2 * z) .* (x.^2 .+ y.^2)) 
+        phasefactor = (-1im) .* exp.(1im * k / (2 * z) .* (x.^2 .+ y.^2)) 
     end
 
     buffer = zero.(U)
@@ -88,11 +88,11 @@ function (fraunhofer::FraunhoferOp)(field)
     buffer = fraunhofer.buffer
     ifftshift!(buffer, field)
     fraunhofer.FFTplan * buffer
-    if !isnothing(fraunhofer.phasefactor)
-        buffer .*= fraunhofer.phasefactor
-    end
     buffer ./= √(size(field, 1) * size(field, 2))
     out = fftshift(buffer)
+    if !isnothing(fraunhofer.phasefactor)
+        out .*= fraunhofer.phasefactor
+    end
     return out, (; fraunhofer.L)
 end
 
@@ -102,12 +102,13 @@ function ChainRulesCore.rrule(f::FraunhoferOp, U)
 
     function f_pullback(ȳ)
         buffer = f.buffer
-        ifftshift!(buffer, ȳ.backing[1])
+        y2 = ȳ.backing[1]
+        if !isnothing(f.phasefactor)
+            y2 = y2 .* conj.((f.phasefactor))
+        end
+        ifftshift!(buffer, y2)
         buffer .*= √(size(U, 1) * size(U, 2))
         res = fftshift(inv(f.FFTplan) * buffer)
-        if !isnothing(f.phasefactor)
-            res .*= conj.(f.phasefactor)
-        end
         return NoTangent(), res
     end
     return field_and_tuple, f_pullback

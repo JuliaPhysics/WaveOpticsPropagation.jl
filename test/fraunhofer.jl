@@ -41,9 +41,9 @@
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]
 
     arr = randn(ComplexF32, (15, 15))
-    fr = Fraunhofer(arr, z, λ, L)
+    fr = Fraunhofer(arr, z, λ, L, skip_final_phase=false)
     f(x) = sum(abs2, arr .- fr(x)[1]) 
-    f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L)[1])
+    f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L, skip_final_phase=false)[1])
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]
 
 end
