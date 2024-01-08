@@ -7,6 +7,7 @@
 Propagate waves efficiently, optically, physically, differentiably with [Julia Lang](https://julialang.org/).
 Those functions are fast and memory efficiently implemented and hence are suited to be used in inverse problems.
 
+⚠️ Under heavy development. Expect things to break.
 
 ## Installation
 Not registered yet, hence install with:
