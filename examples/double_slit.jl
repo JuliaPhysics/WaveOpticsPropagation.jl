@@ -51,6 +51,9 @@ L = 100f-3
 # ╔═╡ 9facb2bf-f279-41de-8858-81dac7a032b5
 z = 1
 
+# ╔═╡ e714ec1e-cceb-4e43-aa22-fa1f69d6c816
+L_new
+
 # ╔═╡ 3cde3fbe-9641-4ffd-9630-9c7bf167ec34
 N = 256
 
@@ -91,17 +94,14 @@ W = x[1 + ΔW * 2 + 1] - x[1]
 md"# Propagate with Fraunhofer Diffraction"
 
 # ╔═╡ 7e797b20-77ee-4888-9b23-74bb2713912f
-@time output, L_new = fraunhofer(slit, z, λ, L)
-
-# ╔═╡ e714ec1e-cceb-4e43-aa22-fa1f69d6c816
-L_new
+@time output, t = fraunhofer(slit, z, λ, L)
 
 # ╔═╡ 0c74a49c-e4de-4172-ac75-4c2692c505fb
 # creating this function is more efficient!
 efficient_fraunhofer = Fraunhofer(slit, z, λ, L);
 
 # ╔═╡ 0e6f74f1-8723-4596-b754-973b253443a4
-@time output2, t = efficient_fraunhofer(slit)
+@time output2, t2 = efficient_fraunhofer(slit)
 
 # ╔═╡ 5c0486d2-5fbd-4cd7-9fc5-583a8e188b2e
 begin
@@ -119,7 +119,7 @@ md"# Compare to analytical solution"
 I_analytical(x) = sinc(W * x / λ / z)^2 * cos(π * S * x / λ / z)^2
 
 # ╔═╡ 42e1a449-0e5c-4d67-a90c-10a54f479c8a
-xpos_out = WaveOpticsPropagation.fftpos(L_new, N, NDTools.CenterFT)
+xpos_out = WaveOpticsPropagation.fftpos(t.L, N, NDTools.CenterFT)
 
 # ╔═╡ 5d36ba4d-e9fe-4b1b-b45d-c82b598dfe7a
 begin

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.30
 
 using Markdown
 using InteractiveUtils
@@ -23,7 +23,7 @@ begin
 end
 
 # ╔═╡ cba50443-4d13-4c05-b413-6a6f3d3ff1c2
-using  WaveOpticsPropagation, Napari, ImageShow, FFTW, CUDA, FourierTools, NDTools, Plots, Colors, PlutoUI
+using  WaveOpticsPropagation, ImageShow, FFTW, CUDA, FourierTools, NDTools, Plots, Colors, PlutoUI
 
 # ╔═╡ f07896d0-808a-470d-8dd8-ed5770a333db
 using LinearAlgebra, IndexFunArrays
@@ -176,15 +176,9 @@ NDTools.expand_dims
 # ╠═f9837f4a-e134-4d92-8984-51836bb89f74
 # ╠═ddbe7f52-57dc-42d5-9edc-6377eb0bf31d
 # ╠═4218847d-9a0c-4e4e-a8b6-6c76e0c3564e
-# ╠═0d275418-1393-41c4-b29a-6b56cb25f728
 # ╠═5fb47911-28b4-456c-b647-eed4af09f5e3
 # ╠═a7325c95-d653-4e7e-ad9c-736a50ba9ea8
-# ╠═a8fb4cfa-61c1-4477-a4e8-af6f8e631a7e
-# ╠═4f585a19-fd50-40d3-8e60-27ebf080bce6
 # ╠═03002431-9a33-4a6b-bb1a-d30f47c3bb45
-# ╠═94e1e172-a807-44cf-8f3f-b98262f3f895
-# ╠═6dc5b732-f121-465a-9dd9-fdf27fb73e90
-# ╠═09954458-5659-46e2-9711-cae7dfac8e36
 # ╠═5bb71ea0-cf7d-4be9-8df3-4d8bdab830d3
 # ╠═9cd1b7fd-d262-4ccc-8a2c-b82f0368ce35
 # ╠═1b1144fe-b732-40bc-8382-727381f69b85

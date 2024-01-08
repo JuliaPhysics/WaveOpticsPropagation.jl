@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.30
 
 using Markdown
 using InteractiveUtils
@@ -16,12 +16,14 @@ end
 
 # ╔═╡ 97891d2b-facd-4f51-9774-5afde6a874e9
 begin
-	using Pkg, Revise
+	using Pkg
 	Pkg.activate(".")
+	Pkg.instantiate()
+	using Revise
 end
 
 # ╔═╡ 034e96b2-c88a-11ed-35f3-9fbfcefa62df
-using WaveOpticsPropagation, Napari, ImageShow, FFTW, CUDA, FourierTools, NDTools, Plots, Colors
+using WaveOpticsPropagation, ImageShow, FFTW, CUDA, FourierTools, NDTools, Plots, Colors
 
 # ╔═╡ 8082f7f3-3f47-4479-b3fa-20b2eb43ee78
 using LinearAlgebra
