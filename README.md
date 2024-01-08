@@ -4,6 +4,8 @@
 |:-----------------------------------------:|:-------------------------------:|
 | [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
 
+[![Documentation for stable version](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/stable) [![Documentation for development version](https://img.shields.io/badge/docs-main-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/dev)
+
 Propagate waves efficiently, optically, physically, differentiably with [Julia Lang](https://julialang.org/).
 Those functions are fast and memory efficiently implemented and hence are suited to be used in inverse problems.
 
@@ -32,7 +34,7 @@ But of course, each vectorial component can be propagated separately.
 
 ## Development
 Contributions are very welcome!
-File an [issue](https://github.com/roflmaostc/RadonKA.jl/issues) on [GitHub](https://github.com/roflmaostc/RadonKA.jl) if you encounter any problems.
+File an [issue](https://github.com/JuliaPhysics/WaveOpticsPropagation.jl/issues) on [GitHub](https://github.com/JuliaPhysics/WaveOpticsPropagation.jl) if you encounter any problems.
 Also file an issue if you want to discuss or propose features.
 
 ## Related packages
