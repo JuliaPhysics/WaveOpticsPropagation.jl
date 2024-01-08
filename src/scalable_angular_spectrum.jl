@@ -171,7 +171,7 @@ function (sas::ScalableAngularSpectrum)(ψ::AbstractArray{T}; return_view=false)
     ψ_precomp = inv(p) * ψ_p_f
     ψ_precomp .*= sas.H₁
     ψ_p_final = p * ψ_precomp
-	ψ_p_final .*= 1 / (1im * T(sqrt(length(ψ_precomp)))) 
+    ψ_p_final .*= 1 / (1im * sqrt(T(size(ψ_precomp, 1) * size(ψ_precomp, 2))))
 
     if !isnothing(sas.H₂)
         ψ_p_final .*= sas.H₂
@@ -185,10 +185,10 @@ end
 
 
 function ChainRulesCore.rrule(sas::ScalableAngularSpectrum, ψ::AbstractArray{T}) where T
-    field_and_tuple = (ψ) 
+    field_and_tuple = sas(ψ) 
     function sas_pullback(ȳ)
         p = sas.FFTplan
-        y2 = ȳ#.backing[1] 
+        y2 = ȳ.backing[1] 
         
         fill!(sas.buffer2, 0)
 
@@ -196,13 +196,13 @@ function ChainRulesCore.rrule(sas::ScalableAngularSpectrum, ψ::AbstractArray{T}
         ifftshift!(sas.buffer, sas.buffer2)
 
         if !isnothing(sas.H₂)
-            sas.buffer .*= (sas.H₂)
+            sas.buffer .*= conj.(sas.H₂)
         end
-	    sas.buffer .*= 1* (1im * T(sqrt(length(sas.buffer)))) 
-        
+        sas.buffer .*= conj.(1 / (1im * sqrt(T(size(sas.buffer2, 1) * size(sas.buffer2, 2)))))
+        sas.buffer .*= (T(size(sas.buffer2, 1) * size(sas.buffer2, 2)))
         inv(p) * sas.buffer 
         sas.buffer .*= conj.(sas.H₁)
-        p * sas.buffer
+        (p) * sas.buffer
         sas.buffer .*= conj.(sas.ΔH)
         inv(p) * sas.buffer
         fftshift!(sas.buffer2, sas.buffer)
