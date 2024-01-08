@@ -56,10 +56,10 @@ p_cuda = plan_fft(array_c);
 md"# Propagation"
 
 # ╔═╡ 864c37c5-6907-4b31-8a4e-8c3c9a684606
-AS = Angular_Spectrum(array, 1f0, 1f0, 1f0)[1];
+AS = AngularSpectrum(array, 1f0, 1f0, 1f0)[1];
 
 # ╔═╡ d9339c77-35cf-4575-b935-79d580badba5
-AS_c = Angular_Spectrum(array_c, 1f0, 1f0, 1f0)[1];
+AS_c = AngularSpectrum(array_c, 1f0, 1f0, 1f0)[1];
 
 # ╔═╡ ad07d942-4985-40dc-9371-d6579e5b92a3
 @mytime angular_spectrum(array, 1f0, 1f0, 1f0);

@@ -85,7 +85,7 @@ L = 5f-3
 z = 30f-3
 
 # ╔═╡ 7be3d272-cf76-4950-b80b-f743ea200d4a
-AS_c, _ = Angular_Spectrum(field_c[:, :, 2], z, λ, L)
+AS_c, _ = AngularSpectrum(field_c[:, :, 2], z, λ, L)
 
 # ╔═╡ f796abe0-00cc-4178-a945-96ae5a245227
 simshow(Array(AS_c(field_c[:, :, 2])[1]), γ=0.3)
@@ -116,10 +116,10 @@ end
 simshow(Array(diffuser_c[:, :, 5]))
 
 # ╔═╡ b436fdc0-ae8d-4dbe-94e6-8b7c26339a70
-#AS_c, _ = Angular_Spectrum(field_c[:, :, 1], z, λ, L)
+#AS_c, _ = AngularSpectrum(field_c[:, :, 1], z, λ, L)
 
 # ╔═╡ c97f6332-82d9-4441-80ad-8a49c7739119
-AS_c2, _ = Angular_Spectrum(togoc(zeros(ComplexF32, (sz..., N))), togoc(repeat([z], N)), λ, L)
+AS_c2, _ = AngularSpectrum(togoc(zeros(ComplexF32, (sz..., N))), togoc(repeat([z], N)), λ, L)
 
 # ╔═╡ 0bd359cc-0bd4-4748-8905-361969811248
 p = plan_fft(diffuser_c, (1,2))

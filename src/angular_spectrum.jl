@@ -1,5 +1,5 @@
 export angular_spectrum
-export Angular_Spectrum
+export AngularSpectrum
 
 
 _transform_z(::Type{T}, z::Number) where {T<:Number} = T(z)
@@ -67,7 +67,7 @@ end
 Returns the electrical field with physical length `L` and wavelength `λ` propagated with the angular spectrum 
 method of plane waves (AS) by the propagation distance `z`.
 
-This method is efficient but to avoid recalculating some arrays (such as the phase kernel), see [`Angular_Spectrum`](@ref). 
+This method is efficient but to avoid recalculating some arrays (such as the phase kernel), see [`AngularSpectrum`](@ref). 
 
 # Arguments
 * `field`: Input field
@@ -111,7 +111,7 @@ angular_spectrum(field::AbstractArray, z, λ, L; kwargs...) = throw(ArgumentErro
 
 
  # highly optimized version with pre-planning
-struct Angular_Spectrum3{A, T, P}
+struct AngularSpectrum3{A, T, P}
     HW::A
     buffer::A
     buffer2::A
@@ -122,7 +122,7 @@ struct Angular_Spectrum3{A, T, P}
 end
 
 """
-    Angular_Spectrum(field, z, λ, L; kwargs...)
+    AngularSpectrum(field, z, λ, L; kwargs...)
 
 Returns a function for efficient reuse of pre-calculated kernels.
 
@@ -134,8 +134,8 @@ See [`angular_spectrum`](@ref) for the full documentation.
 julia> field = zeros(ComplexF32, (4,4)); field[3,3] = 1
 1
 
-julia> as = Angular_Spectrum(field, 100e-9, 632e-9, 10e-6)
-WaveOpticsPropagation.Angular_Spectrum3{Matrix{ComplexF64}, Float64, FFTW.cFFTWPlan{ComplexF32, -1, true, 2, UnitRange{Int64}}}(ComplexF64[0.5451947489704718 + 0.8383094212133275im 0.5456108987195186 + 0.8380386310895693im … 0.5468597886165149 + 0.8372242062878382im 0.5456108987195186 + 0.8380386310895693im; 0.5456108987195186 + 0.8380386310895693im 0.5460271219052333 + 0.8377674988586556im … 0.5472762321570075 + 0.8369520450515843im 0.5460271219052333 + 0.8377674988586556im; … ; 0.5468597886165149 + 0.8372242062878382im 0.5472762321570075 + 0.8369520450515843im … 0.5485260036074586 + 0.8361334961394803im 0.5472762321570075 + 0.8369520450515843im; 0.5456108987195186 + 0.8380386310895693im 0.5460271219052333 + 0.8377674988586556im … 0.5472762321570075 + 0.8369520450515843im 0.5460271219052333 + 0.8377674988586556im], ComplexF64[0.0 + 0.0im 0.0 + 0.0im … 2047.5009765625 + 4.571175720473986e-41im 2047.5009765625 + 4.571175720473986e-41im; 2058.2890625 + 4.571175720473986e-41im 0.0 + 0.0im … 2056.2578125 + 4.571175720473986e-41im 2058.1640625 + 4.571175720473986e-41im; … ; 0.0 + 0.0im 0.0 + 0.0im … 2047.5009765625 + 4.571175720473986e-41im 2047.5009765625 + 4.571175720473986e-41im; 0.0 + 0.0im 0.0 + 0.0im … 2058.0234375 + 4.571175720473986e-41im 0.0 + 0.0im], ComplexF64[0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; … ; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im], 1.0e-5, FFTW in-place forward plan for 8×8 array of ComplexF32
+julia> as = AngularSpectrum(field, 100e-9, 632e-9, 10e-6)
+WaveOpticsPropagation.AngularSpectrum3{Matrix{ComplexF64}, Float64, FFTW.cFFTWPlan{ComplexF32, -1, true, 2, UnitRange{Int64}}}(ComplexF64[0.5451947489704718 + 0.8383094212133275im 0.5456108987195186 + 0.8380386310895693im … 0.5468597886165149 + 0.8372242062878382im 0.5456108987195186 + 0.8380386310895693im; 0.5456108987195186 + 0.8380386310895693im 0.5460271219052333 + 0.8377674988586556im … 0.5472762321570075 + 0.8369520450515843im 0.5460271219052333 + 0.8377674988586556im; … ; 0.5468597886165149 + 0.8372242062878382im 0.5472762321570075 + 0.8369520450515843im … 0.5485260036074586 + 0.8361334961394803im 0.5472762321570075 + 0.8369520450515843im; 0.5456108987195186 + 0.8380386310895693im 0.5460271219052333 + 0.8377674988586556im … 0.5472762321570075 + 0.8369520450515843im 0.5460271219052333 + 0.8377674988586556im], ComplexF64[0.0 + 0.0im 0.0 + 0.0im … 2047.5009765625 + 4.571175720473986e-41im 2047.5009765625 + 4.571175720473986e-41im; 2058.2890625 + 4.571175720473986e-41im 0.0 + 0.0im … 2056.2578125 + 4.571175720473986e-41im 2058.1640625 + 4.571175720473986e-41im; … ; 0.0 + 0.0im 0.0 + 0.0im … 2047.5009765625 + 4.571175720473986e-41im 2047.5009765625 + 4.571175720473986e-41im; 0.0 + 0.0im 0.0 + 0.0im … 2058.0234375 + 4.571175720473986e-41im 0.0 + 0.0im], ComplexF64[0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; … ; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im], 1.0e-5, FFTW in-place forward plan for 8×8 array of ComplexF32
 (dft-rank>=2/1
   (dft-direct-8-x8 "n1fv_8_avx2_128")
   (dft-direct-8-x8 "n1fv_8_avx2_128")), true, 2)
@@ -148,7 +148,7 @@ julia> as(field)
  -2.52505e-7+1.20063e-6im   8.57634e-7-4.05761e-6im   -0.00142377+0.000938398im   8.57634e-7-4.05761e-6im
 ```
 """
-function Angular_Spectrum(field::AbstractArray{CT, N}, z, λ, L; 
+function AngularSpectrum(field::AbstractArray{CT, N}, z, λ, L; 
                           padding=true, pad_factor=2,
                           bandlimit=true,
                           bandlimit_border=(0.8, 1)) where {CT, N}
@@ -169,16 +169,16 @@ function Angular_Spectrum(field::AbstractArray{CT, N}, z, λ, L;
         H .= H .* W
         HW = H
   
-        return Angular_Spectrum3{typeof(H), typeof(L), typeof(p)}(HW, buffer, buffer2, L, p, padding, pad_factor), L
+        return AngularSpectrum3{typeof(H), typeof(L), typeof(p)}(HW, buffer, buffer2, L, p, padding, pad_factor), L
     end
 
 """
-    (as:Angular_Spectrum3)(field)
+    (as:AngularSpectrum3)(field)
 
 Uses the struct to efficiently store some pre-calculated objects.
 Propagate the field.
 """
-function (as::Angular_Spectrum3)(field)
+function (as::AngularSpectrum3)(field)
     fill!(as.buffer2, 0)
     field_new = set_center!(as.buffer2, field, broadcast=true)
     field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
@@ -189,7 +189,7 @@ function (as::Angular_Spectrum3)(field)
 end
 
 
-function ChainRulesCore.rrule(as::Angular_Spectrum3, field)
+function ChainRulesCore.rrule(as::AngularSpectrum3, field)
     field_and_tuple = as(field) 
     function as_pullback(ȳ)
         f̄ = NoTangent()

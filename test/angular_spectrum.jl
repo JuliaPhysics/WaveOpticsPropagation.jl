@@ -10,7 +10,7 @@
 
         out1 = gradient(gg, field)[1]
         @test out1 .+ cis(1) ≈ out2  .+ cis(1)
-        AS, _ = Angular_Spectrum(field, 100e-6, 633e-9, 100e-6)
+        AS, _ = AngularSpectrum(field, 100e-6, 633e-9, 100e-6)
 
         f_AS(x) = sum(abs2.(x .- AS(cis.(x))[1]))
 
@@ -28,7 +28,7 @@
 
         out1 = gradient(gg, field)[1]
         @test out1 .+ cis(1) ≈ out2  .+ cis(1)
-        AS, _ = Angular_Spectrum(field, 100e-6, 633e-9, 100e-6)
+        AS, _ = AngularSpectrum(field, 100e-6, 633e-9, 100e-6)
 
         f_AS(x) = sum(abs2.(x .- AS(cis.(x))[1]))
 

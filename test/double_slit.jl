@@ -41,7 +41,7 @@ function double_slit(N, d, b, offset, z, λ, L)
 	slit_ana = cos.(π .* d_m .* sinθ ./ λ).^2 .* sinc.(b_m .* sinθ ./ λ).^2
 
 	slit_prop = (angular_spectrum(slit_init, z, λ, L)[1])
-	slit_prop2 = (Angular_Spectrum(slit_init, z, λ, L)[1](slit_init))[1]
+	slit_prop2 = (AngularSpectrum(slit_init, z, λ, L)[1](slit_init))[1]
 	@test slit_prop2 ≈ slit_prop
 	
 	slit_prop = abs2.(slit_prop)

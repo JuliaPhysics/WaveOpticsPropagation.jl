@@ -83,7 +83,7 @@ Returns the electrical field with physical length `L` and wavelength `λ` propag
 
 
 # References
-* Rainer Heintzmann, Lars Loetgering, and Felix Wechsler, "Scalable angular spectrum propagation," Optica 10, 1407-1416 (2023)  
+* [Rainer Heintzmann, Lars Loetgering, and Felix Wechsler, "Scalable angular spectrum propagation," Optica 10, 1407-1416 (2023)](https://opg.optica.org/optica/viewmedia.cfm?uri=optica-10-11-1407&html=true) 
 """
 function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ; 
 								 skip_final_phase=true, bandlimit_soft_px=20,
