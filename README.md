@@ -1,11 +1,11 @@
 # WaveOpticsPropagation.jl
 
-| **Build Status**                          | **Code Coverage**               |
-|:-----------------------------------------:|:-------------------------------:|
-| [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
+| **Build Status**                          | **Code Coverage**               | **Docs stable version** | **Docs main branch** |
+|:-----------------------------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
+| [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url]                     | [![Documentation for stable version](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/stable) | [![Documentation for development version](https://img.shields.io/badge/docs-main-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/dev)
+ 
 
-[![Documentation for stable version](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/stable) [![Documentation for development version](https://img.shields.io/badge/docs-main-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/dev)
-
+ 
 Propagate waves efficiently, optically, physically, differentiably with [Julia Lang](https://julialang.org/).
 Those functions are fast and memory efficiently implemented and hence are suited to be used in inverse problems.
 
