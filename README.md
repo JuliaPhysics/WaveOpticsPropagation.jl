@@ -5,11 +5,10 @@
 | [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url]                     | [![Documentation for stable version](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/stable) | [![Documentation for development version](https://img.shields.io/badge/docs-main-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/dev)
  
 
- 
 Propagate waves efficiently, optically, physically, differentiably with [Julia Lang](https://julialang.org/).
-Those functions are fast and memory efficiently implemented and hence are suited to be used in inverse problems.
+Those functions are fast and memory efficient implemented and hence are suited to be used in inverse problems.
 
-⚠️ Under heavy development. Expect things to break.
+⚠️ Under development. Expect things to break. But feel free to try the examples, they should always work!
 
 ## Installation
 Not registered yet, hence install with:
@@ -23,13 +22,13 @@ julia> ]add https://github.com/JuliaPhysics/WaveOpticsPropagation.jl
 * Propagations
     * [x] Angular Spectrum Method of Plane Waves (AS)
     * [x] Fraunhofer Diffraction
-    * [ ] [Scalable Angular Spectrum propagation](https://opg.optica.org/optica/viewmedia.cfm?uri=optica-10-11-1407&html=true)
+    * [x] [Scalable Angular Spectrum propagation](https://opg.optica.org/optica/viewmedia.cfm?uri=optica-10-11-1407&html=true)
     * [ ] Fresnel Propagation with Scaling Behaviour (no priority yet, PR are welcome for that. In principle very similar to the other methods.)
-* CUDA support
-* Differentiable (mainly based on Zygote.jl and ChainRulesCore.jl)
+* [x] CUDA support
+* [x] Differentiable (mainly based on Zygote.jl and ChainRulesCore.jl)
 
 ### Planned
-In principle vectorial propagation in free space is just a propagation of each of the components. Right now, this is not a priority and is not implemented yet.
+Vectorial propagation in free space is just a propagation of each of the components. Right now, this is not a priority and is not implemented yet.
 But of course, each vectorial component can be propagated separately.
 
 ## Development
