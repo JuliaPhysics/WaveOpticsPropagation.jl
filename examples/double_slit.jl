@@ -51,9 +51,6 @@ L = 100f-3
 # ╔═╡ 9facb2bf-f279-41de-8858-81dac7a032b5
 z = 1
 
-# ╔═╡ e714ec1e-cceb-4e43-aa22-fa1f69d6c816
-L_new
-
 # ╔═╡ 3cde3fbe-9641-4ffd-9630-9c7bf167ec34
 N = 256
 
@@ -222,7 +219,6 @@ simshow(abs2.(Array(slit)))
 # ╠═a777cc7a-c79c-494c-9a70-83a90b2ee08d
 # ╠═42ae161e-26b7-4d34-9e92-4c4af27fc447
 # ╠═9facb2bf-f279-41de-8858-81dac7a032b5
-# ╠═e714ec1e-cceb-4e43-aa22-fa1f69d6c816
 # ╠═3cde3fbe-9641-4ffd-9630-9c7bf167ec34
 # ╠═d1734ddf-ec04-4134-82a8-187e697c4810
 # ╠═3ebcb7d8-0ed6-497a-95e3-6e40bfadd8d0

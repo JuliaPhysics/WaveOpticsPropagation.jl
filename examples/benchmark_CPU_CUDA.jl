@@ -35,10 +35,10 @@ array = randn(ComplexF32, sz);
 array_c = togoc(array);
 
 # ╔═╡ 4e651fc1-b6db-4c44-b830-f65c6f68f4a9
-p_cpu = plan_fft(array, flags=FFTW.ESTIMATE);
+p_cpu = plan_fft!(array, flags=FFTW.ESTIMATE);
 
 # ╔═╡ 5f5113ed-d335-4038-a230-b739242aafbc
-p_cuda = plan_fft(array_c);
+p_cuda = plan_fft!(array_c);
 
 # ╔═╡ f897cd86-ddc1-4b84-a11c-d99161c1df3d
 @mytime p_cpu * array;
@@ -80,10 +80,13 @@ md"# Gradient"
 f(x) = sum(abs2, AS_c(x)[1])
 
 # ╔═╡ 17679b22-61ac-42c2-959c-5e28fe880d15
-f(array_c)
+@mytime CUDA.@sync f(array_c)
 
 # ╔═╡ 02c3e595-b978-4ad4-961d-5d7398d3d320
 @mytime CUDA.@sync Zygote.gradient(f, array_c)
+
+# ╔═╡ 819f3128-3a42-425b-871d-a4913b17e94c
+@mytime CUDA.@sync Zygote.withgradient(f, array_c)
 
 # ╔═╡ Cell order:
 # ╠═2fd337ac-8ad0-11ee-3739-459b5825a8c5
@@ -110,3 +113,4 @@ f(array_c)
 # ╠═ca2386b8-0882-4b31-90fa-7ab1df839457
 # ╠═17679b22-61ac-42c2-959c-5e28fe880d15
 # ╠═02c3e595-b978-4ad4-961d-5d7398d3d320
+# ╠═819f3128-3a42-425b-871d-a4913b17e94c
