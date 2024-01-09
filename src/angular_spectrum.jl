@@ -71,7 +71,7 @@ This method is efficient but to avoid recalculating some arrays (such as the pha
 
 # Arguments
 * `field`: Input field
-* `z`: propagation distance
+* `z`: propagation distance. Can be a single number or a vector of `z`s (Or `CuVector`). In this case the returning array has one dimension more.
 * `λ`: wavelength of field
 * `L`: field size (can be a scalar or a tuple) indicating field size
 
@@ -82,6 +82,15 @@ This method is efficient but to avoid recalculating some arrays (such as the pha
 * `bandlimit=true`: applies the bandlimit to avoid circular wraparound due to undersampling 
     of the complex propagation kernel [1]
 * `bandlimit_border=(0.8, 1)`: applies a smooth bandlimit cut-off instead of hard-edge. 
+
+
+# Examples
+```jldoctest
+julia> field = zeros(ComplexF32, (4,4)); field[3,3] = 1
+1
+julia> as, t = angular_spectrum(field, 100e-9, 632e-9, 10e-6)
+(ComplexF32[6.519258f-8 - 3.5390258f-7im -2.5097302f-7 + 1.1966712f-6im 0.00041754358f0 - 0.00027736276f0im -2.5097302f-7 + 1.1966712f-6im; -2.5136978f-7 + 1.1966767f-6im 8.540863f-7 - 4.0512546f-6im -0.001423778f0 + 0.00093840604f0im 8.540863f-7 - 4.0512546f-6im; 0.00041754544f0 - 0.0002773702f0im -0.0014237723f0 + 0.0009384034f0im 0.5497784f0 + 0.8353027f0im -0.0014237723f0 + 0.0009384034f0im; -2.5136978f-7 + 1.1966767f-6im 8.540863f-7 - 4.0512546f-6im -0.001423778f0 + 0.00093840604f0im 8.540863f-7 - 4.0512546f-6im], (H = ComplexF32[0.54519475f0 + 0.8383094f0im 0.5456109f0 + 0.8380386f0im … 0.54685986f0 + 0.8372242f0im 0.5456109f0 + 0.8380386f0im; 0.5456109f0 + 0.8380386f0im 0.5460271f0 + 0.83776754f0im … 0.54727626f0 + 0.83695203f0im 0.5460271f0 + 0.83776754f0im; … ; 0.54685986f0 + 0.8372242f0im 0.54727626f0 + 0.83695203f0im … 0.548526f0 + 0.8361335f0im 0.54727626f0 + 0.83695203f0im; 0.5456109f0 + 0.8380386f0im 0.5460271f0 + 0.83776754f0im … 0.54727626f0 + 0.83695203f0im 0.5460271f0 + 0.83776754f0im], L = 1.0e-5))
+```
 
 
 # References
@@ -128,24 +137,15 @@ Returns a function for efficient reuse of pre-calculated kernels.
 
 See [`angular_spectrum`](@ref) for the full documentation.
 
-
 # Example
 ```jldoctest
 julia> field = zeros(ComplexF32, (4,4)); field[3,3] = 1
 1
 
-julia> as = AngularSpectrum(field, 100e-9, 632e-9, 10e-6)
-WaveOpticsPropagation.AngularSpectrum3{Matrix{ComplexF64}, Float64, FFTW.cFFTWPlan{ComplexF32, -1, true, 2, UnitRange{Int64}}}(ComplexF64[0.5451947489704718 + 0.8383094212133275im 0.5456108987195186 + 0.8380386310895693im … 0.5468597886165149 + 0.8372242062878382im 0.5456108987195186 + 0.8380386310895693im; 0.5456108987195186 + 0.8380386310895693im 0.5460271219052333 + 0.8377674988586556im … 0.5472762321570075 + 0.8369520450515843im 0.5460271219052333 + 0.8377674988586556im; … ; 0.5468597886165149 + 0.8372242062878382im 0.5472762321570075 + 0.8369520450515843im … 0.5485260036074586 + 0.8361334961394803im 0.5472762321570075 + 0.8369520450515843im; 0.5456108987195186 + 0.8380386310895693im 0.5460271219052333 + 0.8377674988586556im … 0.5472762321570075 + 0.8369520450515843im 0.5460271219052333 + 0.8377674988586556im], ComplexF64[0.0 + 0.0im 0.0 + 0.0im … 2047.5009765625 + 4.571175720473986e-41im 2047.5009765625 + 4.571175720473986e-41im; 2058.2890625 + 4.571175720473986e-41im 0.0 + 0.0im … 2056.2578125 + 4.571175720473986e-41im 2058.1640625 + 4.571175720473986e-41im; … ; 0.0 + 0.0im 0.0 + 0.0im … 2047.5009765625 + 4.571175720473986e-41im 2047.5009765625 + 4.571175720473986e-41im; 0.0 + 0.0im 0.0 + 0.0im … 2058.0234375 + 4.571175720473986e-41im 0.0 + 0.0im], ComplexF64[0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; … ; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im; 0.0 + 0.0im 0.0 + 0.0im … 0.0 + 0.0im 0.0 + 0.0im], 1.0e-5, FFTW in-place forward plan for 8×8 array of ComplexF32
-(dft-rank>=2/1
-  (dft-direct-8-x8 "n1fv_8_avx2_128")
-  (dft-direct-8-x8 "n1fv_8_avx2_128")), true, 2)
+julia> as, t = AngularSpectrum(field, 100e-9, 632e-9, 10e-6);
 
 julia> as(field)
-4×4 Matrix{ComplexF64}:
-  7.07805e-8-3.53903e-7im  -2.54379e-7+1.20194e-6im   0.000417542-0.000277363im  -2.54379e-7+1.20194e-6im
- -2.52505e-7+1.20063e-6im   8.57634e-7-4.05761e-6im   -0.00142377+0.000938398im   8.57634e-7-4.05761e-6im
- 0.000417545-0.00027737im  -0.00142378+0.000938403im     0.549778+0.835303im     -0.00142378+0.000938403im
- -2.52505e-7+1.20063e-6im   8.57634e-7-4.05761e-6im   -0.00142377+0.000938398im   8.57634e-7-4.05761e-6im
+(ComplexF32[6.519258f-8 - 3.5390258f-7im -2.5097302f-7 + 1.1966712f-6im 0.00041754358f0 - 0.00027736276f0im -2.5097302f-7 + 1.1966712f-6im; -2.5136978f-7 + 1.1966767f-6im 8.540863f-7 - 4.0512546f-6im -0.001423778f0 + 0.00093840604f0im 8.540863f-7 - 4.0512546f-6im; 0.00041754544f0 - 0.0002773702f0im -0.0014237723f0 + 0.0009384034f0im 0.5497784f0 + 0.8353027f0im -0.0014237723f0 + 0.0009384034f0im; -2.5136978f-7 + 1.1966767f-6im 8.540863f-7 - 4.0512546f-6im -0.001423778f0 + 0.00093840604f0im 8.540863f-7 - 4.0512546f-6im], (L = 1.0e-5,))
 ```
 """
 function AngularSpectrum(field::AbstractArray{CT, N}, z, λ, L; 

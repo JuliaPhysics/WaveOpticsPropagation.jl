@@ -18,7 +18,7 @@
     output, t = fraunhofer(slit, z, λ, L)
     L_new = t.L    
 
-    efficient_fraunhofer = Fraunhofer(slit, z, λ, L);
+    efficient_fraunhofer, t = Fraunhofer(slit, z, λ, L);
     output2, L_new2 = efficient_fraunhofer(slit)
     
 
@@ -35,13 +35,13 @@
     @test all(≈(I_analytical.(xpos_out)[110:150] .+ 1, 1 .+  intensity[129, 110:150, :], rtol=1f-2))
 
     arr = randn(ComplexF32, (N, N))
-    fr = Fraunhofer(arr, z, λ, L)
+    fr, t = Fraunhofer(arr, z, λ, L)
     f(x) = sum(abs2, arr .- fr(x)[1]) 
     f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L)[1])
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]
 
     arr = randn(ComplexF32, (15, 15))
-    fr = Fraunhofer(arr, z, λ, L, skip_final_phase=false)
+    fr, t = Fraunhofer(arr, z, λ, L, skip_final_phase=false)
     f(x) = sum(abs2, arr .- fr(x)[1]) 
     f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L, skip_final_phase=false)[1])
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]

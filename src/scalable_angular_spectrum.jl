@@ -82,12 +82,38 @@ Returns the electrical field with physical length `L` and wavelength `λ` propag
 * `L`: field size (can be a scalar or a tuple) indicating field size
 
 
+# Keyword Arguments 
+* `skip_final_phase=true`: avoid multiplying with final phase. This phase is also undersampled.
+* `bandlimit_border=(0.8, 1)`: apply soft bandlimit instead of hard cutoff
+
+
+# Example
+```jldoctest
+julia> field = zeros(ComplexF32, (256,256)); field[130,130] = 1;
+
+julia> sas, t = ScalableAngularSpectrum(field, 10f-3, 633f-9, 500f-6);
+
+julia> res, t2 = sas(field);
+
+julia> t2
+(L = 0.00162048f0,)
+
+julia> t
+(L = 0.00162048f0,)
+
+julia> t2.L / 500f-6 # calculate magnification
+3.24096f0
+
+julia> 10f-3 * 633f-9 * 256 / 500f-6^2 / 2 # equation from paper
+3.2409596f0
+```
+
 # References
 * [Rainer Heintzmann, Lars Loetgering, and Felix Wechsler, "Scalable angular spectrum propagation," Optica 10, 1407-1416 (2023)](https://opg.optica.org/optica/viewmedia.cfm?uri=optica-10-11-1407&html=true) 
 """
 function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ; 
 								 skip_final_phase=true, bandlimit_soft_px=20,
-								bandlimit_border=(0.8, 1)) where {T} 
+								  bandlimit_border=(0.8, 1)) where {T} 
 	@assert bandlimit_soft_px ≥ 0 "bandlimit_soft_px must be ≥ 0"
 	@assert size(ψ₀, 1) == size(ψ₀, 2) "Restricted to auadratic fields."
     
@@ -156,9 +182,8 @@ function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ;
     buffer2 = similar(buffer)
     return ScalableAngularSpectrum{typeof(ΔH), typeof(H₂), typeof(buffer),
                                    real(T), typeof(FFTplan)}(
-                    ΔH, H₁, H₂, buffer, buffer2, Q, FFTplan, pad_factor)
+                    ΔH, H₁, H₂, buffer, buffer2, Q / 2, FFTplan, pad_factor), (; L=Q / 2)
 end
-
 
 
 function (sas::ScalableAngularSpectrum)(ψ::AbstractArray{T}; return_view=false) where T

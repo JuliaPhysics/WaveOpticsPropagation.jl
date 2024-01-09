@@ -1,9 +1,14 @@
-
-# Propagations
+# Efficient Propagations
+They create efficient functions which avoid recalculating some parts.
 ```@docs
 AngularSpectrum
-angular_spectrum
-fraunhofer
 Fraunhofer
 ScalableAngularSpectrum
+```
+
+# Propagation
+Those were merely for testing purposes.
+```@docs
+fraunhofer
+angular_spectrum
 ```
