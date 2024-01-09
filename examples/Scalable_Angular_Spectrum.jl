@@ -78,22 +78,16 @@ simshow(Array(U_circ))
 @mytime SAS = ScalableAngularSpectrum(U_circ, z_circ, λ, L)
 
 # ╔═╡ 9e3f7e53-3fdb-4638-89bc-27bced937193
-# ╠═╡ disabled = true
-#=╠═╡
 @time SAS_cpu = ScalableAngularSpectrum(Array(U_circ), z_circ, λ, L)
-  ╠═╡ =#
 
 # ╔═╡ 9ec9d456-a33b-4605-9025-c82676eca7e2
 U_circ_cpu = Array(U_circ);
 
 # ╔═╡ cf8d99c6-120d-45a6-9fcc-9d1cb6e40a9b
-# ╠═╡ disabled = true
-#=╠═╡
 @time SAS_cpu(U_circ_cpu);
-  ╠═╡ =#
 
 # ╔═╡ 342b000d-8865-4cd2-bb6b-2de0f6376e9c
-@mytime CUDA.@sync U_p, t = SAS(U_circ)
+@mytime U_p, t = SAS(U_circ)
 
 # ╔═╡ fc7dd2c9-7c7b-45a7-9fed-a319a62375cc
 simshow(Array(abs2.(U_p)), γ=0.13, cmap=:inferno)
@@ -139,7 +133,7 @@ The Fresnel number is $(round((D_box)^2 / z_box / λ, digits=3))
 @mytime SAS2 = ScalableAngularSpectrum(U_box, z_box, λ, L_box, skip_final_phase=true)
 
 # ╔═╡ 2b11c87d-4746-4be6-81f6-f004d30beae4
-@mytime CUDA.@sync U_box_p, t_box = SAS2(U_box)
+@mytime U_box_p, t_box = SAS2(U_box)
 
 # ╔═╡ 9e762dfc-4873-4fe3-b785-f6c4808417a6
 simshow(Array(abs2.(U_box_p)), γ=0.13, cmap=:inferno)
