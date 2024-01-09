@@ -1,5 +1,5 @@
 ```@raw html
-<a  href="../logo/logo.png"><img src="../logo/logo.png"  width="150"></a>
+<a  href="../docs/logo/logo.png"><img src="../docs/logo/logo.png"  width="150"></a>
 ``` ⠀
 
 # WaveOpticsPropagation.jl
