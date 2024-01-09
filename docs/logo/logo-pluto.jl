@@ -20,32 +20,18 @@ function ball(pos, α1, α2, radii=30:10:80)
 end
 
 # ╔═╡ e0943f38-449d-4623-862a-f9c0e4f00f1d
-@drawsvg begin
-	background("white")
+@svg begin
+	#background("white")
 	sethue("brown3")
 	a = 200
-	radii = 30:10:110
+	radii = 28:8:120
 	Δt = 30
 	ball(Point(0,0), -60 - Δt, Δt, radii)
 	sethue("mediumorchid3")
 	ball(Point(a,0), 180 - Δt, 240 + Δt, radii)
 	sethue("forestgreen")
 	ball(Point(a / 2, -a * √3 / 2), 60 - Δt, 180 - 60 + Δt, radii)
-end
-
-
-# ╔═╡ 43bf5acf-d6fa-45bd-a3e0-1b562a553e84
-@drawsvg begin
-background("black")
-sethue("white")
-circle(Point(0,0), 10)
-strokepath()
-arc(Point(0, 0), 70, 0, 3π / 2)
-strokepath()
-end
-
-# ╔═╡ e82f0886-1f6d-46a3-ae1d-def2e4b5ef77
-circle
+end 500 500 "logo.svg"
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -675,7 +661,5 @@ version = "3.5.0+0"
 # ╠═e30e05ae-4ffa-4345-af5f-d835e4debdbf
 # ╠═cc91bb32-9995-48ad-82dd-5fa6ec232cb3
 # ╠═e0943f38-449d-4623-862a-f9c0e4f00f1d
-# ╠═43bf5acf-d6fa-45bd-a3e0-1b562a553e84
-# ╠═e82f0886-1f6d-46a3-ae1d-def2e4b5ef77
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
