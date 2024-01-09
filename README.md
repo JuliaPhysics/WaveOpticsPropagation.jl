@@ -1,6 +1,6 @@
 # WaveOpticsPropagation.jl
 
-| **Build Status**                          | **Code Coverage**               | **Docs stable version** | **Docs main branch** |
+| **Build Status**                          | **Code Coverage**               | **Docs stable** | **Docs main** |
 |:-----------------------------------------:|:-------------------------------:|:-----------------------:|:--------------------:|
 | [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url]                     | [![Documentation for stable version](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/stable) | [![Documentation for development version](https://img.shields.io/badge/docs-main-blue.svg)](https://JuliaPhysics.github.io/WaveOpticsPropagation.jl/dev)
  
