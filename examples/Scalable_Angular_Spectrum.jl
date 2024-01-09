@@ -75,10 +75,10 @@ The Fresnel number is $(round((D_circ / 2 * L / N)^2 / z_circ / λ, digits=3))
 simshow(Array(U_circ))
 
 # ╔═╡ 484704ce-4497-4567-b387-aad06dee6a62
-@mytime SAS = ScalableAngularSpectrum(U_circ, z_circ, λ, L)
+@mytime SAS, _ = ScalableAngularSpectrum(U_circ, z_circ, λ, L)
 
 # ╔═╡ 9e3f7e53-3fdb-4638-89bc-27bced937193
-@time SAS_cpu = ScalableAngularSpectrum(Array(U_circ), z_circ, λ, L)
+@time SAS_cpu, _ = ScalableAngularSpectrum(Array(U_circ), z_circ, λ, L)
 
 # ╔═╡ 9ec9d456-a33b-4605-9025-c82676eca7e2
 U_circ_cpu = Array(U_circ);
@@ -130,7 +130,7 @@ The Fresnel number is $(round((D_box)^2 / z_box / λ, digits=3))
 "
 
 # ╔═╡ 38bc91ff-3188-4129-aa6b-2af458cf59b1
-@mytime SAS2 = ScalableAngularSpectrum(U_box, z_box, λ, L_box, skip_final_phase=true)
+@mytime SAS2, _ = ScalableAngularSpectrum(U_box, z_box, λ, L_box, skip_final_phase=true)
 
 # ╔═╡ 2b11c87d-4746-4be6-81f6-f004d30beae4
 @mytime U_box_p, t_box = SAS2(U_box)

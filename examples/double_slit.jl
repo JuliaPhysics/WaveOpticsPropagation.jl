@@ -95,7 +95,7 @@ md"# Propagate with Fraunhofer Diffraction"
 
 # ╔═╡ 0c74a49c-e4de-4172-ac75-4c2692c505fb
 # creating this function is more efficient!
-efficient_fraunhofer = Fraunhofer(slit, z, λ, L);
+efficient_fraunhofer, _ = Fraunhofer(slit, z, λ, L);
 
 # ╔═╡ 0e6f74f1-8723-4596-b754-973b253443a4
 @time output2, t2 = efficient_fraunhofer(slit)
@@ -160,7 +160,7 @@ fwd = let z=z, L=L, λ=λ
 end
 
 # ╔═╡ c9651b37-d911-4230-a2f5-f94e8f726fbc
-fwd2 = let z=z, L=L, λ=λ, fr=Fraunhofer(rec0 .+ 0im, z, λ, L)
+fwd2 = let z=z, L=L, λ=λ, fr=Fraunhofer(rec0 .+ 0im, z, λ, L)[1]
 	x -> fr(x .+ 0im)
 end
 
