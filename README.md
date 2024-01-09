@@ -16,6 +16,10 @@ Not registered yet, hence install with:
 julia> ]add https://github.com/JuliaPhysics/WaveOpticsPropagation.jl
 ```
 
+## Examples
+See [the rendered notebooks here](https://juliaphysics.github.io/WaveOpticsPropagation.jl/).
+Otherwise, just look into the [examples folder](examples/).
+
 ## Features
 ### Implemented
 * Propagate (electrical) fields based on wave propagation
