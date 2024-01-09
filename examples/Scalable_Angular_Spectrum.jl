@@ -58,7 +58,7 @@ D_circ = N / 8
 U_circ = togoc(ComplexF32.(rr((N, N)) .< D_circ / 2) .* exp.(1im .* 2f0 * π ./ λ .* y .* sind(45f0)) .+ ComplexF32.(rr((N, N)) .< D_circ / 2) .* exp.(1im .* 2f0 * π ./ λ .* y' .* sind(-45f0)));
 
 # ╔═╡ 34c326ee-6663-432e-b884-a5419ce64827
-@bind M Slider(1:0.1:20, show_value=true)
+@bind M Slider(1:0.1:20, show_value=true, default=4)
 
 # ╔═╡ 4202033d-62e6-451f-a064-e61d420da5ff
 z_circ = Float32(M / N / λ * L^2 * 2)
@@ -117,7 +117,7 @@ x_box = y_box';
 U_box = togoc((x_box.^2 .<= (D_box / 2).^2) .* (y_box.^2 .<= (D_box / 2).^2) .* (exp.(1im .* 2f0 * π ./ λ .* y_box' .* sind(20f0))));
 
 # ╔═╡ 11947eea-b2eb-4168-bc96-8e1fc7b74599
-@bind M_box Slider(1:0.5:20, show_value=true)
+@bind M_box Slider(1:0.5:20, show_value=true, default=8)
 
 # ╔═╡ aacc5f18-05b5-4a5e-9217-fa62966830e5
 z_box = M_box / N_box / λ * L_box^2 * 2
