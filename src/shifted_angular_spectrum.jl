@@ -28,36 +28,39 @@ function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, �
 	field_new = padding ? pad(field, pad_factor2) : field
 	
 	# helpful propagation variables
-	(; k, f_x, f_y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
+	(; k, f_x, f_y, x, y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
 	
 	# transfer function kernel of angular spectrum
-    H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .- sxy[2]) .- abs2.(f_y .* λ .- sxy[1])))
-            .+ 1im .* 2 .* real(CT)(π) .* z .* (txy[2] .* f_x .+ txy[1] .* f_y))
+    #H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .- sxy[2]) .- abs2.(f_y .* λ .- sxy[1])))
+    #        .+ 1im .* 2 .* real(CT)(π) .* z .* (txy[2] .* f_x .+ txy[1] .* f_y))
+    
+    H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .- sxy[2]) .- abs2.(f_y .* λ .- sxy[1]))
+                              .+ λ .* (txy[2] .* f_x .+ txy[1] .* f_y)))
+    #H = exp.(1im .* k .* z .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
 	
 	# bandlimit according to Matsushima
 	# as addition we introduce a smooth bandlimit with a Hann window
 	# and fuzzy logic 
-	Δu =   1 ./ L_new
-	u_limit = 1 ./ (sqrt.((2 .* Δu .* z).^2 .+ 1) .* λ)
 	
     W = let
         if bandlimit
 	        # bandlimit filter
-            u_limit1 = u_limit isa AbstractArray ? u_limit[1:1, ..] : u_limit[1] 
-            u_limit2 = u_limit isa AbstractArray ? u_limit[2:2, ..] : u_limit[2] 
+            χ = 1 / λ^2 .- abs2.(f_x .+ sxy[2] ./ λ) .- abs2.(f_y .+ sxy[1] ./ λ)
 
-            W = .*(hann.(scale.(abs2.(f_y) ./ u_limit1 .^2 .+ abs2.(f_x) * λ^2, 
-                                bandlimit_border[1], bandlimit_border[2])),
-                   hann.(scale.(abs2.(f_x) ./ u_limit2 .^2 .+ abs2.(f_y) * λ^2, 
-                             bandlimit_border[1], bandlimit_border[2])))
+            Ωx = z * (txy[2] .- (f_x .+ sxy[2] ./ λ) ./ (sqrt.(χ)))
+            Ωy = z * (txy[1] .- (f_y .+ sxy[1] ./ λ) ./ (sqrt.(χ)))
+
+            Δf = abs.(f_x[1] - f_x[2])
+            W = ( (1 / L_new[2]) .<= abs.(1 ./ 2 ./ Ωx)) .* ( (1 / L_new[1]) .<= abs.(1 ./ 2 ./ Ωy)) 
         else
             # use an array here too, to avoid type instabilities
-            W = similar(field, real(eltype(field)), size(f_y, 1), size(f_x, 1))
+            W = similar(field, real(eltype(field)), size(f_y, 1), size(f_x, 2))
             W .= 1
         end
 	end
-
-    return (;field_new, H, W, fftdims)
+    
+    final_phase = ifftshift(exp.(1im .* 2 .* T(π) ./ λ .* (sxy[2] .* x .+ sxy[1] .* y)), (1,2))
+    return (;field_new, H, W, fftdims, final_phase)
 end
 
 
@@ -102,16 +105,17 @@ function shifted_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L, α;
    
     @assert size(field, 1) == size(field, 2) "input field needs to be quadradically shaped and not $(size(field, 1)), $(size(field, 2))"
 
-    (; field_new, H, W, fftdims) = _prepare_shifted_angular_spectrum(field, z, λ, L, α; padding, 
+    (; field_new, H, W, fftdims, final_phase) = _prepare_shifted_angular_spectrum(field, z, λ, L, real(CT).(α); padding, 
                                               pad_factor, bandlimit, bandlimit_border)
 
 	# propagate field
-	field_out = fftshift(ifft(fft(ifftshift(field_new, fftdims), fftdims) .* H .* W, fftdims), fftdims)
-	
+    field_new_is = ifftshift(field_new, fftdims)# ./ (final_phase)
+    #field_out = fftshift(final_phase .* ifft(fft(field_new_is, fftdims) .* H .* W, fftdims), fftdims)
+    field_out = fftshift(ifft(fft(field_new_is, fftdims) .* H .* W, fftdims), fftdims)
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
 	
 	# return final field and some other variables
-    return field_out_cropped, (; H, L, W)
+    return field_out_cropped, (; H, L, W, final_phase)
 end
 
 
