@@ -57,6 +57,14 @@ function pad(arr::AbstractArray{T, N}, new_size::NTuple; value=zero(T)) where {T
 end
 
 
+function ∇crop_center(dy, arr::AbstractArray{T, N}, new_size::NTuple; value=zero(T)) where {T, N}
+    n_arr = similar(arr, new_size)
+    fill!(n_arr, value)
+    # don't do broadcast. Does not fit with the meaning of pad
+    ∇set_center!(dy, n_arr, arr, broadcast=false)
+end
+
+
 """
     pad(arr::AbstractArray{T, N}, M; value=zero(T))
 
@@ -139,6 +147,8 @@ function crop_center(arr, new_size::NTuple{N}; return_view=true) where {N}
 end
 
 
+
+
 """
     set_center!(arr_large, arr_small; broadcast=false)
 
@@ -216,11 +226,39 @@ function set_center!(arr_large::AbstractArray{T, N}, arr_small::AbstractArray{T1
     return arr_large
 end
 
+
+function ∇set_center!(dy, arr_large::AbstractArray{T, N}, arr_small::AbstractArray{T1, M};
+                     broadcast=false) where {T, T1, M, N}
+    @assert N ≥ M "Can't put a higher dimensional array in a lower dimensional one."
+
+    if broadcast == false
+        inds = ntuple(i -> begin
+                        a, b = get_indices_around_center(size(arr_large, i), size(arr_small, i))
+                        a:b
+                      end,
+                      Val(N)) 
+        arr_large[inds..., ..] .= dy
+    else
+        inds = ntuple(i -> begin
+                        a, b = get_indices_around_center(size(arr_large, i), size(arr_small, i))
+                        a:b
+                      end,
+                      Val(M)) 
+        @show typeof(dy)
+        arr_large[inds..., ..] .= dy
+    end
+
+    
+    return arr_large
+end
+
+
 function ChainRulesCore.rrule(::typeof(crop_center), arr, new_size::NTuple{N, <:Int}) where N
     y = crop_center(arr, new_size) 
     function crop_center_pullback(ȳ)
-        c̄ = pad(ȳ, size(arr), value=zero(eltype(arr)))
-        return NoTangent(), c̄, NoTangent()
+        #c = ∇crop_center(unthunk(ȳ), arr, size(arr), value=zero(eltype(arr)))
+        c =  pad(ȳ, size(arr), value=zero(eltype(arr)))
+        return NoTangent(), c, NoTangent()
     end
     return y, crop_center_pullback
 end
@@ -230,8 +268,8 @@ function ChainRulesCore.rrule(::typeof(pad), arr, M::Union{NTuple, Number}; valu
     y = pad(arr, M; value=value) 
     function pad_pullback(ȳ)
         @assert size(y) == size(ȳ)
-        p̄ = crop_center(ȳ, size(arr))
-        return NoTangent(), p̄, NoTangent()
+        p = crop_center(ȳ, size(arr))
+        return NoTangent(), p, NoTangent()
     end
     return y, pad_pullback
 end

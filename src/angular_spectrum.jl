@@ -193,10 +193,11 @@ function ChainRulesCore.rrule(as::AngularSpectrum3, field)
     field_and_tuple = as(field) 
     function as_pullback(ȳ)
         f̄ = NoTangent()
-        y2 = ȳ.backing[1] 
+        #y2 = ȳ.backing[1] 
+        y2 = ȳ#.backing[1] 
     
         fill!(as.buffer2, 0)
-        field_new = as.padding ? set_center!(as.buffer2, y2, broadcast=true) : y2 
+        field_new = as.padding ? ∇set_center!(y2, as.buffer2, field, broadcast=true) : y2 
         field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
         field_imd .*= conj.(as.HW)
         field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
