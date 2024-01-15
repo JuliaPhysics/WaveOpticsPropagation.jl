@@ -45,12 +45,11 @@ function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, �
     W = let
         if bandlimit
 	        # bandlimit filter
-            χ = 1 / λ^2 .- abs2.(f_x .+ sxy[2] ./ λ) .- abs2.(f_y .+ sxy[1] ./ λ)
+            χ = max.(0, 1 / λ^2 .- abs2.(f_x .+ sxy[2] ./ λ) .- abs2.(f_y .+ sxy[1] ./ λ))
 
             Ωx = z * (txy[2] .- (f_x .+ sxy[2] ./ λ) ./ (sqrt.(χ)))
             Ωy = z * (txy[1] .- (f_y .+ sxy[1] ./ λ) ./ (sqrt.(χ)))
 
-            Δf = abs.(f_x[1] - f_x[2])
             W = ( (1 / L_new[2]) .<= abs.(1 ./ 2 ./ Ωx)) .* ( (1 / L_new[1]) .<= abs.(1 ./ 2 ./ Ωy)) 
         else
             # use an array here too, to avoid type instabilities

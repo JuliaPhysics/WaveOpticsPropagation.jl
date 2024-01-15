@@ -33,7 +33,7 @@ N = 256
 sz = (N, N)
 
 # ╔═╡ 90286b89-aedd-4ece-b9d6-e5c26c6ad635
-α = deg2rad(10f0)
+α = deg2rad(15f0)
 
 # ╔═╡ dc01bc87-ffd7-400f-bbf2-3b00a3a84b78
 L = 100f-6
@@ -48,7 +48,7 @@ y = fftpos(L, N, CenterFT)
 field = box(Float32, sz, (20,20)) .* exp.(1im .* 2f0 * π ./ λ .* y .* sin(α));
 
 # ╔═╡ ea02bb1c-7098-4c44-bc13-f9f62fcdce48
-z = 100f-6
+z = 200f-6
 
 # ╔═╡ 391ca41e-731d-4799-b09d-553c12b949d7
 simshow(field)
@@ -72,13 +72,13 @@ shift2 = z * tan(α) / L
 
 
 # ╔═╡ 62389978-8926-4112-9c2f-b3ec23f2b37d
-simshow(FourierTools.shift(res[1], (shift, 0)) .|> abs2, γ=0.2)
+simshow(FourierTools.shift(res[1], (shift, 0)) .|> identity, γ=0.2)
 
 # ╔═╡ ea032be4-0384-4bd4-ad62-5eca32062af7
-simshow(AS(field)[1] .|> abs2, γ=0.2)
+simshow(AS(field)[1] .|> identity, γ=0.2)
 
 # ╔═╡ e08adc5b-04ff-4e7c-bfd5-a33fe6acb0a1
-simshow(res[1] .|> abs2, γ=0.2)
+simshow(res[1] .|> identity, γ=0.2)
 
 # ╔═╡ 2d56f00c-33d4-4bb7-a3fb-d50210ae24c9
 Revise.errors()
