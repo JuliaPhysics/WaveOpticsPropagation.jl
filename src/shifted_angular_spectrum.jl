@@ -1,4 +1,3 @@
-export shifted_angular_spectrum 
 export ShiftedAngularSpectrum
 
 
@@ -30,18 +29,11 @@ function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, �
 	# helpful propagation variables
 	(; k, f_x, f_y, x, y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
 	
-	# transfer function kernel of angular spectrum
-    #H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .- sxy[2]) .- abs2.(f_y .* λ .- sxy[1])))
-    #        .+ 1im .* 2 .* real(CT)(π) .* z .* (txy[2] .* f_x .+ txy[1] .* f_y))
     
     H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .+ sxy[2]) .- abs2.(f_y .* λ .+ sxy[1]))
                               .+ λ .* (txy[2] .* f_x .+ txy[1] .* f_y)))
-    #H = exp.(1im .* k .* z .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
 	
 	# bandlimit according to Matsushima
-	# as addition we introduce a smooth bandlimit with a Hann window
-	# and fuzzy logic 
-	
     W = let
         if bandlimit
 	        # bandlimit filter
@@ -112,7 +104,8 @@ function shifted_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L, α;
    
     @assert size(field, 1) == size(field, 2) "input field needs to be quadradically shaped and not $(size(field, 1)), $(size(field, 2))"
 
-    (; field_new, H, W, fftdims, ramp_before, ramp_after) = _prepare_shifted_angular_spectrum(field, z, λ, L, real(CT).(α); padding, 
+    (; field_new, H, W, fftdims, ramp_before, ramp_after) = 
+            _prepare_shifted_angular_spectrum(field, z, λ, L, real(CT).(α); padding, 
                                               pad_factor, bandlimit, bandlimit_border)
 
 	# propagate field
@@ -120,9 +113,9 @@ function shifted_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L, α;
 #    ramp_after = 1
     field_out = fftshift(ramp_after .* ifft(fft(field_new_is, fftdims) .* H .* W, fftdims), fftdims)
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
-	
+    shift = z .* tan.(α) ./ L
 	# return final field and some other variables
-    return field_out_cropped, (; H, L, W, ramp_before, ramp_after)
+    return field_out_cropped, (; L, shift)
 end
 
 

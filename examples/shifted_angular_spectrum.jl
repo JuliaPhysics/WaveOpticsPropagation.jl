@@ -15,9 +15,6 @@ end
 # ╔═╡ 3a5d9f20-a01d-481b-9858-b8e523ba7a20
 using WaveOpticsPropagation, CUDA, IndexFunArrays, NDTools, ImageShow, FileIO, Zygote, Optim, Plots, PlutoUI, FourierTools, NDTools
 
-# ╔═╡ c8e01937-dee6-4c0c-b03d-4a91bf86999b
-using Statistics
-
 # ╔═╡ dfc515b5-cfb5-4004-981f-a2262da47bab
 begin
 	# use CUDA if functional
@@ -26,20 +23,23 @@ begin
 	togoc(x) = use_CUDA[] ? CuArray(x) : x 
 end
 
+# ╔═╡ 517b00de-e25a-4688-ac2a-5ca067d7cef7
+md"# Define field with a ramp"
+
 # ╔═╡ 2f6871e8-7c11-49c0-ba9a-dc498e8eb39d
-N = 256
+N = 128
 
 # ╔═╡ 64b448ee-5ccc-4f87-8ee0-20d2d6a41a3b
 sz = (N, N)
 
 # ╔═╡ 90286b89-aedd-4ece-b9d6-e5c26c6ad635
-α = deg2rad(15f0)
+α = 0 * deg2rad(10f0)
 
 # ╔═╡ dc01bc87-ffd7-400f-bbf2-3b00a3a84b78
-L = 100f-6
+L = 50f-6
 
 # ╔═╡ fdb36c00-57e6-4e3a-a9af-ed1282cf774a
-y = fftpos(L, N, CenterFT)
+y = fftpos(L[1], N, CenterFT)
 
 # ╔═╡ 89ec7708-f439-4881-9349-f46d0e75ea93
 λ = 405f-9
@@ -48,81 +48,63 @@ y = fftpos(L, N, CenterFT)
 field = box(Float32, sz, (20,20)) .* exp.(1im .* 2f0 * π ./ λ .* y .* sin(α));
 
 # ╔═╡ ea02bb1c-7098-4c44-bc13-f9f62fcdce48
-z = 200f-6
+z = 100f-6
 
 # ╔═╡ 391ca41e-731d-4799-b09d-553c12b949d7
 simshow(field)
 
+# ╔═╡ 83982659-dccb-4691-bac1-53abcfc9a88b
+md"# Compare AS and shifted AS"
+
 # ╔═╡ 2a0ef89b-d9ae-4186-9ccf-15d7785ff407
-AS = AngularSpectrum(field, z, λ, L)[1]
+res_AS = AngularSpectrum(field, z, λ, L)[1](field)[1];
 
 # ╔═╡ 9cbafe25-3af6-4bcf-833c-8d3d7ca428a2
 res = shifted_angular_spectrum(field, z, λ, L, (α , 0), bandlimit=true)
 
 # ╔═╡ 4efdc02b-4f69-4893-a410-6c6bbb765bab
-shift = z * tan(α) / L * N
+shift = (z .* tan.(α) ./ L .* N)[1]
 
 # ╔═╡ 24b045a3-7828-4e25-a5bc-656f29cb8166
-shift2 = z * tan(α) / L
+shift2 = z .* tan.(α) ./ L
+
+# ╔═╡ 8afd2051-66dc-4b46-b7d8-13dd752b98da
+md"
+Left is shifted AS, middle is shifted AS but shifted in real space such that it roughly fits to AS. Right is AS
+"
 
 # ╔═╡ cd6f41c7-532b-4681-98e9-fba8a05fb86b
-[simshow(res[1][:, :], γ=1) simshow(FourierTools.shift(res[1], (shift, 0)), γ=1) simshow(AS(field)[1], γ=1)]
+[simshow(res[1][round(Int, shift)+1:end, :], γ=1) simshow(FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :], γ=1) simshow(res_AS[round(Int, shift)+1:end, :], γ=1)]
+
+# ╔═╡ 0c96fc1e-57ee-4f7f-8c0c-2cc8e65cc5b1
+simshow(FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :], γ=1) 
+
+# ╔═╡ 6acb594c-2f4d-44a6-b795-786b71c9657b
+simshow(res_AS[round(Int, shift)+1:end, :], γ=1)
+
+# ╔═╡ 7c9fd69b-9741-40b8-ae41-f4ce19d34594
+ simshow(FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :] .- res_AS[round(Int, shift)+1:end, :], γ=1)
+
+# ╔═╡ 1c2b9b4b-6190-476b-8e6b-fab20147f0e9
+sum(abs2, res_AS[round(Int, shift)+1:end, :] .-  FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :])
+
+# ╔═╡ 365d1605-7cb7-43d3-a428-85621e56dcd6
+sum(abs2, res_AS[round(Int, shift)+1:end, :])
+
+# ╔═╡ 154b48f2-58b8-4e4f-8648-8ea771125be5
+sum(abs2, FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :])
 
 # ╔═╡ f3f7bc9e-a16f-49d3-920f-031326f5f1af
+all(.≈(1 .+ FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :], 1 .+ res_AS[round(Int, shift)+1:end, :], rtol=5f-2))
 
+# ╔═╡ d7eac41e-c5c0-46f8-9b2f-d2f116b65d95
 
-# ╔═╡ 62389978-8926-4112-9c2f-b3ec23f2b37d
-simshow(FourierTools.shift(res[1], (shift, 0)) .|> identity, γ=0.2)
-
-# ╔═╡ ea032be4-0384-4bd4-ad62-5eca32062af7
-simshow(AS(field)[1] .|> identity, γ=0.2)
-
-# ╔═╡ e08adc5b-04ff-4e7c-bfd5-a33fe6acb0a1
-simshow(res[1] .|> identity, γ=0.2)
-
-# ╔═╡ 2d56f00c-33d4-4bb7-a3fb-d50210ae24c9
-Revise.errors()
-
-# ╔═╡ add49c3a-e0a5-4d07-b7b0-f0dd73547d0f
-simshow(abs2.((AS(field)[1] .|> abs2).- (FourierTools.shift(res[1], (shift, 0)) .|> abs2)), γ=1)
-
-# ╔═╡ 19a99e3f-af5e-4902-ac06-767901a895ec
-mean(AS(field)[1] .+ 1 .≈ res[1] .+ 1)
-
-# ╔═╡ ebfe96db-a2cd-4d98-92eb-3b1ada42fa78
-simshow((res[2].H .* res[2].W))
-
-# ╔═╡ e2fabf05-5ddd-48b4-8e5d-67a036ba1bc7
-simshow(field ./ select_region(fftshift(res[2].ramp_before), new_size=(256, 256)))
-
-# ╔═╡ 57717409-ebcb-4948-b83d-36af7909e1f2
-simshow(field)
-
-# ╔═╡ f2e04b22-f007-48bc-a2bd-7c05fb06298c
-simshow(res[2].ramp_after)
-
-# ╔═╡ a15779aa-21a0-44f7-ad13-5dfa873ba36a
-simshow(res[2].ramp_before)
-
-# ╔═╡ 508e3c5a-ab89-4ffa-8f7c-9087bc29cbce
-size(res[2].W)
-
-# ╔═╡ cb77a12b-f5c7-42f5-a5f9-c47051666be5
-fs = fftfreq(size(img, 1), size(img, 1) / L)
-
-# ╔═╡ 7921f448-3d77-45dc-9fb1-411a9a64300f
-# ╠═╡ disabled = true
-#=╠═╡
-shift = fftshift(ifft(fft(ifftshift(img)) .* exp.(1im * 2 * Float32(π) * z .* (sind(20) .* fs))))
-  ╠═╡ =#
-
-# ╔═╡ fd16d619-9e2c-45bb-b4d9-6fafd102c771
-simshow(shift)
 
 # ╔═╡ Cell order:
 # ╠═b11e7be2-b315-11ee-27e7-abecfdbe64b6
 # ╠═3a5d9f20-a01d-481b-9858-b8e523ba7a20
 # ╠═dfc515b5-cfb5-4004-981f-a2262da47bab
+# ╟─517b00de-e25a-4688-ac2a-5ca067d7cef7
 # ╠═2f6871e8-7c11-49c0-ba9a-dc498e8eb39d
 # ╠═64b448ee-5ccc-4f87-8ee0-20d2d6a41a3b
 # ╠═fdb36c00-57e6-4e3a-a9af-ed1282cf774a
@@ -132,25 +114,18 @@ simshow(shift)
 # ╠═89ec7708-f439-4881-9349-f46d0e75ea93
 # ╠═ea02bb1c-7098-4c44-bc13-f9f62fcdce48
 # ╠═391ca41e-731d-4799-b09d-553c12b949d7
+# ╟─83982659-dccb-4691-bac1-53abcfc9a88b
 # ╠═2a0ef89b-d9ae-4186-9ccf-15d7785ff407
 # ╠═9cbafe25-3af6-4bcf-833c-8d3d7ca428a2
 # ╠═4efdc02b-4f69-4893-a410-6c6bbb765bab
 # ╠═24b045a3-7828-4e25-a5bc-656f29cb8166
+# ╟─8afd2051-66dc-4b46-b7d8-13dd752b98da
 # ╠═cd6f41c7-532b-4681-98e9-fba8a05fb86b
+# ╠═0c96fc1e-57ee-4f7f-8c0c-2cc8e65cc5b1
+# ╠═6acb594c-2f4d-44a6-b795-786b71c9657b
+# ╠═7c9fd69b-9741-40b8-ae41-f4ce19d34594
+# ╠═1c2b9b4b-6190-476b-8e6b-fab20147f0e9
+# ╠═365d1605-7cb7-43d3-a428-85621e56dcd6
+# ╠═154b48f2-58b8-4e4f-8648-8ea771125be5
 # ╠═f3f7bc9e-a16f-49d3-920f-031326f5f1af
-# ╠═62389978-8926-4112-9c2f-b3ec23f2b37d
-# ╠═ea032be4-0384-4bd4-ad62-5eca32062af7
-# ╠═e08adc5b-04ff-4e7c-bfd5-a33fe6acb0a1
-# ╠═2d56f00c-33d4-4bb7-a3fb-d50210ae24c9
-# ╠═add49c3a-e0a5-4d07-b7b0-f0dd73547d0f
-# ╠═c8e01937-dee6-4c0c-b03d-4a91bf86999b
-# ╠═19a99e3f-af5e-4902-ac06-767901a895ec
-# ╠═ebfe96db-a2cd-4d98-92eb-3b1ada42fa78
-# ╠═e2fabf05-5ddd-48b4-8e5d-67a036ba1bc7
-# ╠═57717409-ebcb-4948-b83d-36af7909e1f2
-# ╠═f2e04b22-f007-48bc-a2bd-7c05fb06298c
-# ╠═a15779aa-21a0-44f7-ad13-5dfa873ba36a
-# ╠═508e3c5a-ab89-4ffa-8f7c-9087bc29cbce
-# ╠═cb77a12b-f5c7-42f5-a5f9-c47051666be5
-# ╠═7921f448-3d77-45dc-9fb1-411a9a64300f
-# ╠═fd16d619-9e2c-45bb-b4d9-6fafd102c771
+# ╠═d7eac41e-c5c0-46f8-9b2f-d2f116b65d95
