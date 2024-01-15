@@ -30,6 +30,7 @@ Otherwise, just look into the [examples folder](examples/).
     * [x] Angular Spectrum Method of Plane Waves (AS)
     * [x] Fraunhofer Diffraction
     * [x] [Scalable Angular Spectrum propagation](https://opg.optica.org/optica/viewmedia.cfm?uri=optica-10-11-1407&html=true)
+    * [x] Shifted Angular Spectrum propagation
     * [ ] Fresnel Propagation with Scaling Behaviour (no priority yet, PR are welcome for that. In principle very similar to the other methods.)
 * [x] CUDA support
 * [x] Differentiable (mainly based on Zygote.jl and ChainRulesCore.jl)

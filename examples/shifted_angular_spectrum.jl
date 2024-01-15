@@ -27,13 +27,13 @@ end
 md"# Define field with a ramp"
 
 # ╔═╡ 2f6871e8-7c11-49c0-ba9a-dc498e8eb39d
-N = 128
+N = 256
 
 # ╔═╡ 64b448ee-5ccc-4f87-8ee0-20d2d6a41a3b
 sz = (N, N)
 
 # ╔═╡ 90286b89-aedd-4ece-b9d6-e5c26c6ad635
-α = 0 * deg2rad(10f0)
+α = deg2rad(10f0)
 
 # ╔═╡ dc01bc87-ffd7-400f-bbf2-3b00a3a84b78
 L = 50f-6
@@ -60,7 +60,7 @@ md"# Compare AS and shifted AS"
 res_AS = AngularSpectrum(field, z, λ, L)[1](field)[1];
 
 # ╔═╡ 9cbafe25-3af6-4bcf-833c-8d3d7ca428a2
-res = shifted_angular_spectrum(field, z, λ, L, (α , 0), bandlimit=true)
+res = ShiftedAngularSpectrum(field, z, λ, L, (α , 0), bandlimit=true)[1](field)
 
 # ╔═╡ 4efdc02b-4f69-4893-a410-6c6bbb765bab
 shift = (z .* tan.(α) ./ L .* N)[1]
@@ -100,6 +100,12 @@ all(.≈(1 .+ FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :]
 # ╔═╡ d7eac41e-c5c0-46f8-9b2f-d2f116b65d95
 
 
+# ╔═╡ 4c3d7581-df26-4bec-9e0e-44279158d8b9
+
+
+# ╔═╡ ed3ec3b6-4825-4cd8-9d95-13d978d64584
+
+
 # ╔═╡ Cell order:
 # ╠═b11e7be2-b315-11ee-27e7-abecfdbe64b6
 # ╠═3a5d9f20-a01d-481b-9858-b8e523ba7a20
@@ -129,3 +135,5 @@ all(.≈(1 .+ FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :]
 # ╠═154b48f2-58b8-4e4f-8648-8ea771125be5
 # ╠═f3f7bc9e-a16f-49d3-920f-031326f5f1af
 # ╠═d7eac41e-c5c0-46f8-9b2f-d2f116b65d95
+# ╠═4c3d7581-df26-4bec-9e0e-44279158d8b9
+# ╟─ed3ec3b6-4825-4cd8-9d95-13d978d64584
