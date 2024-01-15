@@ -4,6 +4,7 @@ They create efficient functions which avoid recalculating some parts.
 AngularSpectrum
 Fraunhofer
 ScalableAngularSpectrum
+ShiftedAngularSpectrum
 ```
 
 # Propagation
