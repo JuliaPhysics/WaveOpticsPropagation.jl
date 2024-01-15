@@ -13,8 +13,8 @@ function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, �
     z = _transform_z(T, z)
     L = T.(L isa Number ? (L, L) : L)
 
-    sxy = sin.(α)
-    txy = tan.(α)
+    sxy = .+ sin.(α)
+    txy = .+ tan.(α)
 
     bandlimit_border = real(CT).(bandlimit_border)
     L_new = padding ? pad_factor .* L : L
@@ -34,7 +34,7 @@ function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, �
     #H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .- sxy[2]) .- abs2.(f_y .* λ .- sxy[1])))
     #        .+ 1im .* 2 .* real(CT)(π) .* z .* (txy[2] .* f_x .+ txy[1] .* f_y))
     
-    H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .- sxy[2]) .- abs2.(f_y .* λ .- sxy[1]))
+    H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .+ sxy[2]) .- abs2.(f_y .* λ .+ sxy[1]))
                               .+ λ .* (txy[2] .* f_x .+ txy[1] .* f_y)))
     #H = exp.(1im .* k .* z .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
 	
@@ -58,9 +58,17 @@ function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, �
             W .= 1
         end
 	end
+   
+    shift = txy .* z
+
+    ya = similar(field_new, real(eltype(field)), (size(field_new, 1), 1))
+    ya .= (fftpos(L_new[1], size(field_new, 1), CenterFT)) .+ shift[1]
+    xa = similar(field_new, real(eltype(field)), (1, size(field_new, 2)))
+    xa .= (fftpos(L_new[2], size(field_new, 2), CenterFT))' .+ shift[2]
     
-    final_phase = ifftshift(exp.(1im .* 2 .* T(π) ./ λ .* (sxy[2] .* x .+ sxy[1] .* y)), (1,2))
-    return (;field_new, H, W, fftdims, final_phase)
+    ramp_before = ifftshift(exp.(1im .* 2 .* T(π) ./ λ .* (sxy[2] .* x .+ sxy[1] .* y)), (1,2))
+    ramp_after = ifftshift(exp.(1im .* 2 .* T(π) ./ λ .* (sxy[2] .* xa .+ sxy[1] .* ya)), (1,2))
+    return (;field_new, H, W, fftdims, ramp_before, ramp_after)
 end
 
 
@@ -105,17 +113,17 @@ function shifted_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L, α;
    
     @assert size(field, 1) == size(field, 2) "input field needs to be quadradically shaped and not $(size(field, 1)), $(size(field, 2))"
 
-    (; field_new, H, W, fftdims, final_phase) = _prepare_shifted_angular_spectrum(field, z, λ, L, real(CT).(α); padding, 
+    (; field_new, H, W, fftdims, ramp_before, ramp_after) = _prepare_shifted_angular_spectrum(field, z, λ, L, real(CT).(α); padding, 
                                               pad_factor, bandlimit, bandlimit_border)
 
 	# propagate field
-    field_new_is = ifftshift(field_new, fftdims)# ./ (final_phase)
-    #field_out = fftshift(final_phase .* ifft(fft(field_new_is, fftdims) .* H .* W, fftdims), fftdims)
-    field_out = fftshift(ifft(fft(field_new_is, fftdims) .* H .* W, fftdims), fftdims)
+    field_new_is = ifftshift(field_new, fftdims) ./ (ramp_before)
+#    ramp_after = 1
+    field_out = fftshift(ramp_after .* ifft(fft(field_new_is, fftdims) .* H .* W, fftdims), fftdims)
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
 	
 	# return final field and some other variables
-    return field_out_cropped, (; H, L, W, final_phase)
+    return field_out_cropped, (; H, L, W, ramp_before, ramp_after)
 end
 
 
