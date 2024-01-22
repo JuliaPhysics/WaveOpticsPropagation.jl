@@ -38,7 +38,7 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
 	# as addition we introduce a smooth bandlimit with a Hann window
 	# and fuzzy logic 
 	Δu =   1 ./ L_new
-	u_limit = 1 ./ (sqrt.((2 .* Δu .* z).^2 .+ 1) .* λ)
+	u_limit = Zygote.@ignore 1 ./ (sqrt.((2 .* Δu .* z).^2 .+ 1) .* λ)
 	
     W = let
         if bandlimit
@@ -193,6 +193,8 @@ function ChainRulesCore.rrule(as::AngularSpectrum3, field)
     field_and_tuple = as(field) 
     function as_pullback(ȳ)
         f̄ = NoTangent()
+        # i tried to fix this once, but we somehow the Tangent type is missing the dimensionality
+        # which we need for set_center! and crop_center
         y2 = ȳ.backing[1] 
     
         fill!(as.buffer2, 0)
@@ -200,7 +202,13 @@ function ChainRulesCore.rrule(as::AngularSpectrum3, field)
         field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
         field_imd .*= conj.(as.HW)
         field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
-        field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
+        # that means z is a vector and we do plane to volume propagation
+        if size(as.buffer, 3) > 1 
+            sum!(view(as.buffer, :, :, 1), field_out)
+            field_out_cropped = as.padding ? crop_center(view(as.buffer, :, :, 1), size(field), return_view=true) : field_out
+        else
+            field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
+        end
         return f̄, field_out_cropped 
     end
     return field_and_tuple, as_pullback
