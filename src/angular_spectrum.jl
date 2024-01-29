@@ -32,8 +32,11 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
 	(; k, f_x, f_y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
 	
 	# transfer function kernel of angular spectrum
-    H = exp.(1im .* k .* z .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
-	
+    H = exp.(1im .* k .* abs.(z) .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
+
+    # take complex conjugate, for negative zs
+    H = real.(H) .+ sign.(z) .* 1im .* imag(H) 
+
 	# bandlimit according to Matsushima
 	# as addition we introduce a smooth bandlimit with a Hann window
 	# and fuzzy logic 
