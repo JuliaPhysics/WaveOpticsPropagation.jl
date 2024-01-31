@@ -208,7 +208,7 @@ function ChainRulesCore.rrule(as::AngularSpectrum3, field)
         # that means z is a vector and we do plane to volume propagation
         if size(as.buffer, 3) > 1 
             sum!(view(as.buffer, :, :, 1), field_out)
-            field_out_cropped = as.padding ? crop_center(view(as.buffer, :, :, 1), size(field), return_view=true) : field_out
+            field_out_cropped = as.padding ? crop_center(view(as.buffer, :, :, 1), size(field), return_view=true) : view(as.buffer, :, :, 1) 
         else
             field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
         end
