@@ -13,11 +13,11 @@ struct ScalableAngularSpectrum{AP, AP2, AB, T, P}
 end
 
 """
-    _propagation_variables(field, z, λ, L)
+    _SAS_propagation_variables(field, z, λ, L)
 
 Internal method to create variables we need for propagation such as frequencies in Fourier space, etc..
 """
-function _propagation_variables(field::AbstractArray{T, M}, z, λ, L) where {T, M} 
+function _SAS_propagation_variables(field::AbstractArray{T, M}, z, λ, L) where {T, M} 
 	@assert size(field, 1) == size(field, 2) "Quadratic fields only working currently"
 	
 	# wave number
@@ -129,7 +129,7 @@ function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ;
 	
 	# applies zero padding
 	ψ_p = select_region(ψ₀, new_size=size(ψ₀) .* pad_factor)
-	k, dx, df, f_x, f_y, x, y = _propagation_variables(ψ_p, z, λ, L_new)  
+	k, dx, df, f_x, f_y, x, y = _SAS_propagation_variables(ψ_p, z, λ, L_new)  
 	M = λ * z * N / L^2 / 2
 	
 	# calculate anti_aliasing_filter for precompensation
