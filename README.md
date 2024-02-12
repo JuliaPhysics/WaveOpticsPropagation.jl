@@ -40,10 +40,25 @@ Otherwise, just look into the [examples folder](examples/).
 Vectorial propagation in free space is just a propagation of each of the components. Right now, this is not a priority and is not implemented yet.
 But of course, each vectorial component can be propagated separately.
 
+
+## Citation
+This package was created as part of scientific work. Please consider citing it :)
+```bibtex
+@misc{wechsler2024wave,
+      title={Wave optical model for tomographic volumetric additive manufacturing}, 
+      author={Felix Wechsler and Carlo Gigli and Jorge Madrid-Wolff and Christophe Moser},
+      year={2024},
+      eprint={2402.06283},
+      archivePrefix={arXiv},
+      primaryClass={physics.optics}
+}
+```
+
 ## Development
 Contributions are very welcome!
 File an [issue](https://github.com/JuliaPhysics/WaveOpticsPropagation.jl/issues) on [GitHub](https://github.com/JuliaPhysics/WaveOpticsPropagation.jl) if you encounter any problems.
 Also file an issue if you want to discuss or propose features.
+
 
 ## Related packages
 There is the outdated [PhysicalOptics.jl](https://github.com/JuliaPhysics/PhysicalOptics.jl) which provided similar methods.
