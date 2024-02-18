@@ -34,7 +34,7 @@
 
         field = zeros(ComplexF64, (15, 15))
         field[5:6, 3:8] .= 1
-        gg(x) = sum(abs2.(x .- angular_spectrum(cis.(x), [100e-6, 200e-6], 633e-9, 100e-6)))
+        gg(x) = sum(abs2.(x .- WaveOpticsPropagation.angular_spectrum(cis.(x), [100e-6, 200e-6], 633e-9, 100e-6)))
         out1 = gradient(gg, field)[1]
         out2 = FiniteDifferences.grad(central_fdm(5, 1), gg, field)[1]
         @test out1 .+ cis(1) ≈ out2  .+ cis(1)

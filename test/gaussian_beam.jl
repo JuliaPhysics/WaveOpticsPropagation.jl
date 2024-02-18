@@ -30,7 +30,7 @@ function test_gauss_consistency(λ, L, N, z, z_init, w_0; do_test=true)
 	y = reshape(Float32.(fftpos(L[1], N[1], CenterFT)) ,:, 1)
 	x = reshape(Float32.(fftpos(L[2], N[2], CenterFT)), 1, :)
 	field = gauss_beam.(y, x, z_init, λ, w_0);
-	field_as = angular_spectrum(field, z, λ, L);
+	field_as = WaveOpticsPropagation.angular_spectrum(field, z, λ, L);
 	field_z = gauss_beam.(y, x, z_init + z, λ, w_0);
 
 

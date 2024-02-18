@@ -17,7 +17,7 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
     L = T.(L isa Number ? (L, L) : L)
 
     bandlimit_border = real(CT).(bandlimit_border)
-    L_new = padding ? pad_factor .* L : L
+    Lp = padding ? pad_factor .* L : L
 
 	# applies zero padding
     if ndims(field) == 2
@@ -25,10 +25,10 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
     elseif ndims(field) == 3
         pad_factor2 = (pad_factor * size(field, 1), pad_factor * size(field, 2), size(field, 3))
     end
-	field_new = padding ? pad(field, pad_factor2) : field
+	fieldp = padding ? pad(field, pad_factor2) : field
 	
 	# helpful propagation variables
-	(; k, f_x, f_y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
+	(; k, f_x, f_y, x, y) = Zygote.@ignore _propagation_variables(fieldp, λ, Lp)
 	
 	# transfer function kernel of angular spectrum
     H = exp.(1im .* k .* abs.(z) .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
@@ -39,9 +39,11 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
 	# bandlimit according to Matsushima
 	# as addition we introduce a smooth bandlimit with a Hann window
 	# and fuzzy logic 
-	Δu =   1 ./ L_new
+	Δu =   1 ./ Lp
 	u_limit = Zygote.@ignore 1 ./ (sqrt.((2 .* Δu .* z).^2 .+ 1) .* λ)
-	
+
+    params = Params(y, x, y, x, L, Lp)
+
     W = let
         if bandlimit
 	        # bandlimit filter
@@ -59,7 +61,7 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
         end
 	end
 
-    return (;field_new, H, W, fftdims)
+    return (;fieldp, H, W, fftdims, params)
 end
 
 
@@ -105,11 +107,11 @@ function angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L;
    
     @assert size(field, 1) == size(field, 2) "input field needs to be quadradically shaped and not $(size(field, 1)), $(size(field, 2))"
 
-    (; field_new, H, W, fftdims) = _prepare_angular_spectrum(field, z, λ, L; padding, 
+    (; fieldp, H, W, fftdims) = _prepare_angular_spectrum(field, z, λ, L; padding, 
                                               pad_factor, bandlimit, bandlimit_border)
 
 	# propagate field
-	field_out = fftshift(ifft(fft(ifftshift(field_new, fftdims), fftdims) .* H .* W, fftdims), fftdims)
+	field_out = fftshift(ifft(fft(ifftshift(fieldp, fftdims), fftdims) .* H .* W, fftdims), fftdims)
 	
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
 	
@@ -122,11 +124,11 @@ angular_spectrum(field::AbstractArray, z, λ, L; kwargs...) = throw(ArgumentErro
 
 
  # highly optimized version with pre-planning
-struct AngularSpectrum3{A, T, P}
+struct AngularSpectrum3{A, P, M, M2}
     HW::A
     buffer::A
     buffer2::A
-    L::T
+    params::Params{M, M2}
     p::P
     padding::Bool
     pad_factor::Int
@@ -163,15 +165,15 @@ function AngularSpectrum(field::AbstractArray{CT, N}, z, λ, L;
                           bandlimit=true,
                           bandlimit_border=(0.8, 1)) where {CT, N}
    
-        (; field_new, H, W, fftdims) = _prepare_angular_spectrum(field, z, λ, L; padding, 
+        (; fieldp, H, W, fftdims, params) = _prepare_angular_spectrum(field, z, λ, L; padding, 
                                               pad_factor, bandlimit, bandlimit_border)
     
       
         if z isa AbstractVector
-            buffer2 = similar(field, complex(eltype(field_new)), (size(field_new, 1), size(field_new, 2), length(z)))
+            buffer2 = similar(field, complex(eltype(fieldp)), (size(fieldp, 1), size(fieldp, 2), length(z)))
             buffer = copy(buffer2)
         else
-            buffer2 = similar(field, complex(eltype(field_new)), (size(field_new, 1), size(field_new, 2)))
+            buffer2 = similar(field, complex(eltype(fieldp)), (size(fieldp, 1), size(fieldp, 2)))
             buffer = copy(buffer2)
         end
         
@@ -179,7 +181,7 @@ function AngularSpectrum(field::AbstractArray{CT, N}, z, λ, L;
         H .= H .* W
         HW = H
   
-        return AngularSpectrum3{typeof(H), typeof(L), typeof(p)}(HW, buffer, buffer2, L, p, padding, pad_factor)
+        return AngularSpectrum3(HW, buffer, buffer2, params, p, padding, pad_factor)
     end
 
 """
@@ -190,8 +192,8 @@ Propagate the field.
 """
 function (as::AngularSpectrum3)(field)
     fill!(as.buffer2, 0)
-    field_new = set_center!(as.buffer2, field, broadcast=true)
-    field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
+    fieldp = set_center!(as.buffer2, field, broadcast=true)
+    field_imd = as.p * ifftshift!(as.buffer, fieldp, (1, 2))
     field_imd .*= as.HW
     field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
     field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
@@ -208,8 +210,8 @@ function ChainRulesCore.rrule(as::AngularSpectrum3, field)
         y2 = ȳ
     
         fill!(as.buffer2, 0)
-        field_new = as.padding ? set_center!(as.buffer2, y2, broadcast=true) : y2 
-        field_imd = as.p * ifftshift!(as.buffer, field_new, (1, 2))
+        fieldp = as.padding ? set_center!(as.buffer2, y2, broadcast=true) : y2 
+        field_imd = as.p * ifftshift!(as.buffer, fieldp, (1, 2))
         field_imd .*= conj.(as.HW)
         field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
         # that means z is a vector and we do plane to volume propagation
