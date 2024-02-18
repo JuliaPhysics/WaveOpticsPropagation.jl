@@ -78,7 +78,7 @@ function shifted_angular_spectrum(field::AbstractArray{CT, 2}, z, λ, L, α;
     field_out_cropped = padding ? crop_center(field_out, size(field)) : field_out
     shift = z .* tan.(α) ./ L
 	# return final field and some other variables
-    return field_out_cropped, (; L, shift)
+    return field_out_cropped
 end
 
 
