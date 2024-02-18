@@ -17,5 +17,6 @@ include("scalable_angular_spectrum.jl")
 include("fraunhofer.jl")
 include("beams.jl")
 include("conv.jl")
+include("shifted_SAS.jl")
 
 end
