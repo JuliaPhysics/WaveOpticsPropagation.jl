@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.37
+# v0.19.38
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ 59413ae0-c2ce-11ee-31f3-c52d9d263afb
 begin
 	using Pkg
-	Pkg.activate("../WaveOpticsPropagation.jl/examples/")
+	Pkg.activate(".")
 	Pkg.instantiate()
 	using Revise
 end
