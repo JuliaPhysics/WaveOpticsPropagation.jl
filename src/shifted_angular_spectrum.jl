@@ -1,6 +1,5 @@
 export ShiftedAngularSpectrum
 
-
 function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, α;
                           padding=true, pad_factor=2,
                           bandlimit=true,
@@ -159,7 +158,7 @@ function ShiftedAngularSpectrum(field::AbstractArray{CT, N}, z::Number, λ, L, �
 
 
         return ShiftedAngularSpectrum{typeof(H), typeof(L), typeof(shift), typeof(p), typeof(ramp_before)}(HW, 
-                    buffer, buffer2, L, shift, p, padding, pad_factor, ramp_before, ramp_after), (;L, shift)
+                    buffer, buffer2, L, shift, p, padding, pad_factor, ramp_before, ramp_after)
     end
 
 
@@ -185,7 +184,7 @@ function (as::ShiftedAngularSpectrum{A, T, T2, P, R})(field) where {A,T,T2,P,R}
     end
     field_out = fftshift!(as.buffer2, field_imd, (1, 2))
     field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
-    return field_out_cropped, (; as.L, as.shift)
+    return field_out_cropped
 end
 
 
@@ -193,7 +192,7 @@ function ChainRulesCore.rrule(as::ShiftedAngularSpectrum{A, T, T2, P, R}, field)
     field_and_tuple = as(field) 
     function as_pullback(ȳ)
         f̄ = NoTangent()
-        y2 = ȳ.backing[1] 
+        y2 = ȳ
     
         fill!(as.buffer2, 0)
         field_new = as.padding ? set_center!(as.buffer2, y2, broadcast=true) : y2 
