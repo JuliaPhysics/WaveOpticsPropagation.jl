@@ -17,7 +17,7 @@ Those functions are fast and memory efficient implemented and hence are suited t
 ## Installation
 Not registered yet, hence install with:
 ```julia
-julia> ]add https://github.com/JuliaPhysics/WaveOpticsPropagation.jl
+julia> using Pkg; Pkg.add("WaveOpticsPropagation")
 ```
 
 ## Examples
