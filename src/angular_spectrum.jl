@@ -206,7 +206,7 @@ function ChainRulesCore.rrule(as::AngularSpectrum3, field)
         field_imd .*= conj.(as.HW)
         field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
         # that means z is a vector and we do plane to volume propagation
-        if size(as.buffer, 3) > 1 
+        if size(as.buffer, 3) > 1 && ndims(field) == 2
             sum!(view(as.buffer, :, :, 1), field_out)
             field_out_cropped = as.padding ? crop_center(view(as.buffer, :, :, 1), size(field), return_view=true) : view(as.buffer, :, :, 1) 
         else
