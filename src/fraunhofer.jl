@@ -83,21 +83,23 @@ julia> 4f-3 *  632f-9 * 256 / (100f-6)^2
 64.71681f0
 ```
 """
-function Fraunhofer(U, z, λ, L; skip_final_phase=true)
-    @assert size(U, 1) == size(U, 2)
-    L_new = λ * z / L
+function Fraunhofer(U::AbstractArray{CT}, _z::Number, _λ, _L; skip_final_phase=true) where CT
+    λ = real(CT)(_λ)
+    z = real(CT)(_z)
+    L = real(CT).(_L isa Number ? (_L, _L) : _L)
+    L_new = λ .* z ./ L
 	Ns = size(U)[1:2]
    
     k = eltype(U)(2π) / λ
     # output coordinates
     y = similar(U, real(eltype(U)), (Ns[1], 1))
-    y .= (fftpos(L, Ns[1], CenterFT))
+    y .= (fftpos(L[1], Ns[1], CenterFT))
     x = similar(U, real(eltype(U)), (1, Ns[2]))
-    x .= (fftpos(L, Ns[2], CenterFT))'
+    x .= (fftpos(L[2], Ns[2], CenterFT))'
     yp = similar(U, real(eltype(U)), (Ns[1], 1))
-    yp .= (fftpos(L_new, Ns[1], CenterFT))
+    yp .= (fftpos(L_new[1], Ns[1], CenterFT))
     xp = similar(U, real(eltype(U)), (1, Ns[2]))
-    xp .= (fftpos(L_new, Ns[2], CenterFT))'
+    xp .= (fftpos(L_new[2], Ns[2], CenterFT))'
 
     if skip_final_phase
         phasefactor = nothing
