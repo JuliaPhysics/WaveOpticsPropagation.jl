@@ -5,7 +5,7 @@ _transform_z(::Type{T}, z::Number) where {T<:Number} = T(z)
 _transform_z(::Type{T}, z::AbstractArray{T}) where T = reshape(z, 1, 1, :)
 _transform_z(::Type{T}, z::AbstractArray{T2}) where {T, T2} = reshape(T.(z), 1, 1, :)
 
-function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
+function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, _L;
                           padding=true, pad_factor=2,
                           bandlimit=true,
                           bandlimit_border=(0.8, 1.0)) where {CT<:Complex}
@@ -14,7 +14,7 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
     T = real(CT)
     λ = T(λ)
     z = _transform_z(T, z)
-    L = T.(L isa Number ? (L, L) : L)
+    L = T.(_L isa Number ? (_L, _L) : _L)
 
     bandlimit_border = real(CT).(bandlimit_border)
     Lp = padding ? pad_factor .* L : L
@@ -42,7 +42,13 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, L;
 	Δu =   1 ./ Lp
 	u_limit = Zygote.@ignore 1 ./ (sqrt.((2 .* Δu .* z).^2 .+ 1) .* λ)
 
-    params = Params(y, x, y, x, L, Lp)
+    # y and x positions in real space, use correct spacing -> fftpos
+	y1 = similar(field, real(eltype(field)), (size(field, 1), 1))
+	y1 .= (fftpos(L[1], size(field, 1), CenterFT))
+	x1 = similar(field, real(eltype(field)), (1, size(field, 2)))
+	x1 .= (fftpos(L[2], size(field, 2), CenterFT))'
+
+    params = Params(y1, x1, y1, x1, L, L)
 
     W = let
         if bandlimit
@@ -67,25 +73,6 @@ end
 
 """
     angular_spectrum(field, z, λ, L; kwargs...)
-
-Returns the electrical field with physical length `L` and wavelength `λ` propagated with the angular spectrum 
-method of plane waves (AS) by the propagation distance `z`.
-
-This method is efficient but to avoid recalculating some arrays (such as the phase kernel), see [`AngularSpectrum`](@ref). 
-
-# Arguments
-* `field`: Input field
-* `z`: propagation distance. Can be a single number or a vector of `z`s (Or `CuVector`). In this case the returning array has one dimension more.
-* `λ`: wavelength of field
-* `L`: field size (can be a scalar or a tuple) indicating field size
-
-
-# Keyword Arguments
-* `padding=true`: applies padding to avoid convolution wraparound
-* `pad_factor=2`: padding of 2. Larger numbers are not recommended since they don't provide better results.
-* `bandlimit=true`: applies the bandlimit to avoid circular wraparound due to undersampling 
-    of the complex propagation kernel [1]
-* `bandlimit_border=(0.8, 1)`: applies a smooth bandlimit cut-off instead of hard-edge. 
 
 
 # Examples
@@ -138,6 +125,25 @@ end
     AngularSpectrum(field, z, λ, L; kwargs...)
 
 Returns a function for efficient reuse of pre-calculated kernels.
+This function returns the electrical field with physical length `L` and wavelength `λ` propagated with the angular spectrum 
+method of plane waves (AS) by the propagation distance `z`.
+
+This method is efficient but to avoid recalculating some arrays (such as the phase kernel), see [`AngularSpectrum`](@ref). 
+
+# Arguments
+* `field`: Input field
+* `z`: propagation distance. Can be a single number or a vector of `z`s (Or `CuVector`). In this case the returning array has one dimension more.
+* `λ`: wavelength of field
+* `L`: field size (can be a scalar or a tuple) indicating field size
+
+
+# Keyword Arguments
+* `padding=true`: applies padding to avoid convolution wraparound
+* `bandlimit=true`: applies the bandlimit to avoid circular wraparound due to undersampling 
+    of the complex propagation kernel [1]
+* `bandlimit_border=(0.8, 1)`: applies a smooth bandlimit cut-off instead of hard-edge. 
+
+
 
 See [`angular_spectrum`](@ref) for the full documentation.
 
@@ -168,7 +174,6 @@ function AngularSpectrum(field::AbstractArray{CT, N}, z, λ, L;
         (; fieldp, H, W, fftdims, params) = _prepare_angular_spectrum(field, z, λ, L; padding, 
                                               pad_factor, bandlimit, bandlimit_border)
     
-      
         if z isa AbstractVector
             buffer2 = similar(field, complex(eltype(fieldp)), (size(fieldp, 1), size(fieldp, 2), length(z)))
             buffer = copy(buffer2)
