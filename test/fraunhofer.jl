@@ -43,4 +43,18 @@
     f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L, skip_final_phase=false)[1])
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]
 
+
+    @testset "Test symmetry" begin
+        arr = randn(ComplexF32, (4,4))
+        arr_ = permutedims(arr, (2,1))
+        @test Fraunhofer(arr, 100e-6, 633e-9, (100e-6, 10e-6))(arr)[:] ≈ permutedims(Fraunhofer(arr_, 100e-6, 633e-9, (10e-6, 100e-6))(arr_), (2,1))[:]
+        
+        arr = randn(ComplexF32, (4,2))
+        arr_ = permutedims(arr, (2,1))
+        @test Fraunhofer(arr, 100e-6, 633e-9, (100e-6, 10e-6))(arr)[:] ≈ permutedims(Fraunhofer(arr_, 100e-6, 633e-9, (10e-6, 100e-6))(arr_), (2,1))[:]
+    end
 end
+
+
+
+
