@@ -44,9 +44,9 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, _L;
 
     # y and x positions in real space, use correct spacing -> fftpos
 	y1 = similar(field, real(eltype(field)), (size(field, 1), 1))
-	y1 .= (fftpos(L[1], size(field, 1), CenterFT))
+	Zygote.@ignore y1 .= (fftpos(L[1], size(field, 1), CenterFT))
 	x1 = similar(field, real(eltype(field)), (1, size(field, 2)))
-	x1 .= (fftpos(L[2], size(field, 2), CenterFT))'
+	Zygote.@ignore x1 .= (fftpos(L[2], size(field, 2), CenterFT))'
 
     params = Params(y1, x1, y1, x1, L, L)
 
