@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.30
+# v0.19.37
 
 using Markdown
 using InteractiveUtils
@@ -91,14 +91,14 @@ W = x[1 + ΔW * 2 + 1] - x[1]
 md"# Propagate with Fraunhofer Diffraction"
 
 # ╔═╡ 7e797b20-77ee-4888-9b23-74bb2713912f
-@time output, t = fraunhofer(slit, z, λ, L)
+@time output = fraunhofer(slit, z, λ, L);
 
 # ╔═╡ 0c74a49c-e4de-4172-ac75-4c2692c505fb
 # creating this function is more efficient!
-efficient_fraunhofer, _ = Fraunhofer(slit, z, λ, L);
+efficient_fraunhofer = Fraunhofer(slit, z, λ, L);
 
 # ╔═╡ 0e6f74f1-8723-4596-b754-973b253443a4
-@time output2, t2 = efficient_fraunhofer(slit)
+@time output2 = efficient_fraunhofer(slit);
 
 # ╔═╡ 5c0486d2-5fbd-4cd7-9fc5-583a8e188b2e
 begin
@@ -160,18 +160,18 @@ fwd = let z=z, L=L, λ=λ
 end
 
 # ╔═╡ c9651b37-d911-4230-a2f5-f94e8f726fbc
-fwd2 = let z=z, L=L, λ=λ, fr=Fraunhofer(rec0 .+ 0im, z, λ, L)[1]
+fwd2 = let z=z, L=L, λ=λ, fr=Fraunhofer(rec0 .+ 0im, z, λ, L)
 	x -> fr(x .+ 0im)
 end
 
 # ╔═╡ e5c3f3dc-5eb3-421e-90ab-a16ea73e5621
 f = let intensity_cu=intensity_cu, fwd=fwd
-	f(x) = sum(abs2, intensity_cu .- abs2.(fwd(abs2.(x) .+ 0im)[1]))
+	f(x) = sum(abs2, intensity_cu .- abs2.(fwd(abs2.(x) .+ 0im)))
 end
 
 # ╔═╡ cb0b276f-d479-4024-8ca4-116a210fe2ed
 f2 = let intensity_cu=intensity_cu, fwd2=fwd2
-	f(x) = sum(abs2, intensity_cu .- abs2.(fwd2(abs2.(x) .+ 0im)[1]))
+	f(x) = sum(abs2, intensity_cu .- abs2.(fwd2(abs2.(x) .+ 0im)))
 end
 
 # ╔═╡ 30555d35-04a8-44b7-afd7-345730d97a61
@@ -244,7 +244,7 @@ simshow(abs2.(Array(slit)))
 # ╠═2c28b256-f60c-48b6-a34a-d2908c979e30
 # ╠═3a19cbfe-6efc-45f7-9aa3-f319f34a534e
 # ╠═b19225e0-5536-4af1-bbbc-c6124e91536b
-# ╠═e0aa0714-08e0-46f4-b6d4-8c5df044ddd9
+# ╟─e0aa0714-08e0-46f4-b6d4-8c5df044ddd9
 # ╠═c8a3d8b0-f68d-4c38-ae1a-8081846bda23
 # ╠═c9651b37-d911-4230-a2f5-f94e8f726fbc
 # ╠═e5c3f3dc-5eb3-421e-90ab-a16ea73e5621

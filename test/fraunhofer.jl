@@ -1,4 +1,4 @@
-@testset "Angular Spectrum" begin
+@testset "Fraunhofer" begin
     L = 100f-3
     λ = 633f-9
     z = 1
@@ -15,35 +15,46 @@
 	mid = N ÷ 2+ 1
 	slit[:, mid-ΔS-ΔW:mid-ΔS+ΔW] .= 1
 	slit[:, mid+ΔS-ΔW:mid+ΔS+ΔW] .= 1
-    output, t = fraunhofer(slit, z, λ, L)
-    L_new = t.L    
+    output = fraunhofer(slit, z, λ, L)
 
-    efficient_fraunhofer, t = Fraunhofer(slit, z, λ, L);
-    output2, L_new2 = efficient_fraunhofer(slit)
+    efficient_fraunhofer = Fraunhofer(slit, z, λ, L);
+    output2 = efficient_fraunhofer(slit)
     
 
-    @test L_new ≈ L_new_ref
-    @test L_new2.L ≈ L_new_ref
 
     @test output2 ≈ output
 
     I_analytical(x) = sinc(W * x / λ / z)^2 * cos(π * S * x / λ / z)^2
     intensity = abs2.(output)
 	intensity ./= maximum(intensity)
-    xpos_out = WaveOpticsPropagation.fftpos(L_new, N, NDTools.CenterFT)
+    xpos_out = WaveOpticsPropagation.fftpos(L_new_ref, N, NDTools.CenterFT)
 
     @test all(≈(I_analytical.(xpos_out)[110:150] .+ 1, 1 .+  intensity[129, 110:150, :], rtol=1f-2))
 
     arr = randn(ComplexF32, (N, N))
-    fr, t = Fraunhofer(arr, z, λ, L)
-    f(x) = sum(abs2, arr .- fr(x)[1]) 
-    f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L)[1])
+    fr = Fraunhofer(arr, z, λ, L)
+    f(x) = sum(abs2, arr .- fr(x)) 
+    f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L))
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]
 
     arr = randn(ComplexF32, (15, 15))
-    fr, t = Fraunhofer(arr, z, λ, L, skip_final_phase=false)
+    fr = Fraunhofer(arr, z, λ, L, skip_final_phase=false)
     f(x) = sum(abs2, arr .- fr(x)[1]) 
     f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L, skip_final_phase=false)[1])
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]
 
+
+    @testset "Test symmetry" begin
+        arr = randn(ComplexF32, (4,4))
+        arr_ = permutedims(arr, (2,1))
+        @test Fraunhofer(arr, 100e-6, 633e-9, (100e-6, 10e-6))(arr)[:] ≈ permutedims(Fraunhofer(arr_, 100e-6, 633e-9, (10e-6, 100e-6))(arr_), (2,1))[:]
+        
+        arr = randn(ComplexF32, (4,2))
+        arr_ = permutedims(arr, (2,1))
+        @test Fraunhofer(arr, 100e-6, 633e-9, (100e-6, 10e-6))(arr)[:] ≈ permutedims(Fraunhofer(arr_, 100e-6, 633e-9, (10e-6, 100e-6))(arr_), (2,1))[:]
+    end
 end
+
+
+
+

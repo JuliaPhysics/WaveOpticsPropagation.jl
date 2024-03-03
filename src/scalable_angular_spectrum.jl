@@ -1,15 +1,14 @@
 export ScalableAngularSpectrum
 
  # highly optimized version with pre-planning
-struct ScalableAngularSpectrum{AP, AP2, AB, T, P}
+struct ScalableAngularSpectrumOp{AP, AP2, AB, T, P}
     ΔH::AP
     H₁::AP
     H₂::AP2 # could be nothing!
     buffer::AB
     buffer2::AB
-    L::T
+    params::T
     FFTplan::P
-    pad_factor::Int
 end
 
 """
@@ -39,10 +38,11 @@ function _SAS_propagation_variables(field::AbstractArray{T, M}, z, λ, L) where 
 	
 	# y and x positions in real space
 	#y = ifftshift(range(-L/2, L/2, length=N))
-	y = similar(field, real(eltype(field)), (N,))
+	y = similar(field, real(eltype(field)), (N, 1))
+	x = similar(field, real(eltype(field)), (1, N))
 	y .= fftpos(L, N, CenterFT)
     y = ifftshift(y)
-	x = y'
+	x .= y'
 	
 	return (; k, dx, df, f_x, f_y, x, y)
 end
@@ -158,13 +158,13 @@ function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ;
 	# new sample coordinates
 	dq = λ * z / L_new
 	Q = dq * N * pad_factor
-	q_y = similar(ψ_p, pad_factor * N)
-	# fftpos generates coordinates from -L/2 to L/2 but excluding the last 
-	# final bit
+    q_y = similar(ψ_p, (pad_factor * N, 1))
+    q_x = similar(ψ_p, (1, pad_factor * N))
 	q_y .= fftpos(dq * pad_factor * N, pad_factor * N, CenterFT)
     q_y = ifftshift(q_y)
-	q_x = q_y'
+	q_x .= q_y'
 	
+    	
 	# calculate phases of Fresnel
 	H₁ = exp.(1im .* k ./ (2 .* z) .* (x .^ 2 .+ y .^ 2))
 	
@@ -177,16 +177,20 @@ function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ;
 	end
 	
     FFTplan = plan_fft!(ψ_p, (1,2))
-
+    # output field size
+    yp = similar(ψ_p, real(T), (N, 1))
+    xp = similar(ψ_p, real(T), (1, N))
+	yp .= fftpos(dq * N, N, CenterFT)
+	xp .= yp'
+ 
+    params = Params(y, x, yp, xp, L, Q/2)
     buffer = similar(ψ_p)
     buffer2 = similar(buffer)
-    return ScalableAngularSpectrum{typeof(ΔH), typeof(H₂), typeof(buffer),
-                                   real(T), typeof(FFTplan)}(
-                    ΔH, H₁, H₂, buffer, buffer2, Q / 2, FFTplan, pad_factor), (; L=Q / 2)
+    return ScalableAngularSpectrumOp(ΔH, H₁, H₂, buffer, buffer2, params, FFTplan)
 end
 
 
-function (sas::ScalableAngularSpectrum)(ψ::AbstractArray{T}; return_view=false) where T
+function (sas::ScalableAngularSpectrumOp)(ψ::AbstractArray{T}; return_view=false) where T
     p = sas.FFTplan
     fill!(sas.buffer2, 0)
     ψ_p = set_center!(sas.buffer2, ψ)
@@ -204,20 +208,18 @@ function (sas::ScalableAngularSpectrum)(ψ::AbstractArray{T}; return_view=false)
     fftshift!(sas.buffer2, ψ_p_final)
 
 	ψ_final = crop_center(sas.buffer2, size(ψ); return_view)
-    return ψ_final, (; sas.L)
+    return ψ_final
 end
 
 
 
-function ChainRulesCore.rrule(sas::ScalableAngularSpectrum, ψ::AbstractArray{T}) where T
-    field_and_tuple = sas(ψ) 
+function ChainRulesCore.rrule(sas::ScalableAngularSpectrumOp, ψ::AbstractArray{T}) where T
+    field = sas(ψ) 
     function sas_pullback(ȳ)
         p = sas.FFTplan
-        y2 = ȳ.backing[1] 
-        
         fill!(sas.buffer2, 0)
 
-        set_center!(sas.buffer2, y2)
+        set_center!(sas.buffer2, ȳ)
         ifftshift!(sas.buffer, sas.buffer2)
 
         if !isnothing(sas.H₂)
@@ -234,8 +236,7 @@ function ChainRulesCore.rrule(sas::ScalableAngularSpectrum, ψ::AbstractArray{T}
 
         final = crop_center(sas.buffer2, size(ψ)) 
 
-
         return NoTangent(), final
     end
-    return field_and_tuple, sas_pullback
+    return field, sas_pullback
 end
