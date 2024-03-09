@@ -1,17 +1,14 @@
 export ShiftedScalableAngularSpectrum
 
  # highly optimized version with pre-planning
-struct ShiftedScalableAngularSpectrum{AP, AP2, AB, T, P, AV}
+struct ShiftedScalableAngularSpectrum{AP, AP2, AB, PP, P}
     ΔH::AP
     H₁::AP
     H₂::AP2 # could be nothing!
     buffer::AB
     buffer2::AB
-    L::T
-    xout::AV
-    yout::AV
+    params::PP
     FFTplan::P
-    pad_factor::Int
 end
 
 function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, L, α; 
@@ -30,8 +27,6 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, L, α;
 	ψ_p = select_region(ψ₀, new_size=size(ψ₀) .* pad_factor)
 	k, dx, df, f_x, f_y, x, y = _SAS_propagation_variables(ψ_p, z, λ, L_new)  
 	M = λ * z * N / L^2 / 2
-
-
 
 
 	W = 1#.*(smooth_f.(cx.^2 .* (1 .+ tx.^2) ./ tx.^2 .+ cy.^2, limits...),
@@ -53,9 +48,10 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, L, α;
 	# new sample coordinates
 	dq = λ * z / L_new
 	Q = dq * N * pad_factor
-    q_y = similar(ψ_p, real(CT), (pad_factor * N,1))
-    q_x = similar(ψ_p, real(CT), (1,pad_factor * N))
     q_yx_shift = tanxy .* z
+    
+    q_y = similar(ψ_p, real(CT), (pad_factor * N, 1))
+    q_x = similar(ψ_p, real(CT), (1, pad_factor * N))
 	q_y .= fftpos(dq * pad_factor * N, pad_factor * N, CenterFT)
     q_y = q_yx_shift[1] .+ ifftshift(q_y)
     q_x .= q_yx_shift[2] .+ q_y'
@@ -73,9 +69,16 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, L, α;
 	
     FFTplan = plan_fft!(ψ_p, (1,2))
 
+    yp = similar(ψ_p, real(CT), (pad_factor * N, 1))
+    xp = similar(ψ_p, real(CT), (1, pad_factor * N))
+	yp .= fftpos(dq * pad_factor * N, pad_factor * N, CenterFT)
+    yp = q_yx_shift[1] .+ ifftshift(q_y)
+    xp .= q_yx_shift[2] .+ q_y'
+
+    params = Params(y, x, yp, xp, L, Q/2)
     buffer = similar(ψ_p)
     buffer2 = similar(buffer)
-    return ShiftedScalableAngularSpectrum(ΔH, H₁, H₂, buffer, buffer2, L, q_x, q_y, FFTplan, pad_factor)
+    return ShiftedScalableAngularSpectrum(ΔH, H₁, H₂, buffer, buffer2, params, FFTplan)
 end
 
 
