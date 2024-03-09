@@ -57,13 +57,13 @@ z = 200f-6
 simshow(field)
 
 # ╔═╡ 8dd05266-5383-408b-a747-b50a0f4fba66
-res_AS = AngularSpectrum(field, z, λ, L)[1](field)[1];
+res_AS = AngularSpectrum(field, z, λ, L)(field)[1];
 
 # ╔═╡ 50f75305-9107-4495-8ae9-68cd11498e16
-res = ShiftedAngularSpectrum(field, z, λ, L, (α , 0), bandlimit=true)[1](field)
+res = ShiftedAngularSpectrum(field, z, λ, L, (α , 0), bandlimit=true)(field)
 
 # ╔═╡ c95c1b1e-7645-4488-883e-e45be15717d8
-res2 = WaveOpticsPropagation.ShiftedScalableAngularSpectrum(field, z, λ, L, (α , 0))[1](field)
+res2 = WaveOpticsPropagation.ShiftedScalableAngularSpectrum(field, z, λ, L, (α , 0))(field)
 
 # ╔═╡ 2e41d692-4705-47f1-81f9-8e388d265847
 res3 = WaveOpticsPropagation.ScalableAngularSpectrum(field, z, λ, L)[1](field)
