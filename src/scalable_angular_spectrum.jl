@@ -181,7 +181,6 @@ function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ;
     yp = similar(ψ_p, real(T), (N, 1))
     xp = similar(ψ_p, real(T), (1, N))
 	yp .= fftpos(dq * N, N, CenterFT)
-    yp = ifftshift(yp)
 	xp .= yp'
  
     params = Params(y, x, yp, xp, L, Q/2)
