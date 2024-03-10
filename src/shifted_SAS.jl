@@ -1,7 +1,7 @@
 export ShiftedScalableAngularSpectrum
 
  # highly optimized version with pre-planning
-struct ShiftedScalableAngularSpectrum{AP, AP2, AB, PP, P}
+struct ShiftedScalableAngularSpectrumOP{AP, AP2, AB, PP, P}
     ΔH::AP
     H₁::AP
     H₂::AP2 # could be nothing!
@@ -11,39 +11,37 @@ struct ShiftedScalableAngularSpectrum{AP, AP2, AB, PP, P}
     FFTplan::P
 end
 
-function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, L, α; 
+function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, _L, _α; 
 								 skip_final_phase=true) where {CT} 
 	@assert size(ψ₀, 1) == size(ψ₀, 2) "Restricted to auadratic fields."
     
     pad_factor = 2
     set_pad_zero = false
 	
+    L = _L# _L isa Number : real(CT).((_L, _L)) : real(CT).(L)
+    α = real(CT).(_α)
 
 	N = size(ψ₀, 1)
-	L_new = pad_factor * L
+	L_new = pad_factor .* L
 
 
 	# applies zero padding
 	ψ_p = select_region(ψ₀, new_size=size(ψ₀) .* pad_factor)
 	k, dx, df, f_x, f_y, x, y = _SAS_propagation_variables(ψ_p, z, λ, L_new)  
 	M = λ * z * N / L^2 / 2
-
-
-	W = 1#.*(smooth_f.(cx.^2 .* (1 .+ tx.^2) ./ tx.^2 .+ cy.^2, limits...),
-		#	smooth_f.(cy.^2 .* (1 .+ ty.^2) ./ ty.^2 .+ cx.^2, limits...))
     
     sinxy = .+ sin.(α)
     tanxy = .+ tan.(α)
 
-	# ΔH is the core part of Fresnel and AS
-    H_AS = sqrt.(0im .+ 1 .- abs2.(f_x .* λ .+ sinxy[2]) .- abs2.(f_y .* λ .+ sinxy[1])) 
-    H_AS = (sqrt.(CT(1) .- abs2.(f_x .* λ .+ sinxy[2]) .- abs2.(f_y .* λ .+ sinxy[1])
-                 .+ λ .* (tanxy[2] .* f_x .+ tanxy[1] .* f_y)))
+    mysqrt(x) = sqrt(max(0, x))
+    Δf = (1 / L_new, 1 / L_new)
+    χ = 1 / λ^2 .- (f_x .+ sinxy[2] / λ).^2 .- (f_y .+ sinxy[1] / λ).^2
+    W = (abs.(Δf[2] .* (z .* (tanxy[2] .- (f_x .+ sinxy[2] ./ λ) ./ mysqrt.(χ)  .+ λ .* f_x)) .* 2) .< 1) .* 
+        (abs.(Δf[1] .* (z .* (tanxy[1] .- (f_y .+ sinxy[1] ./ λ) ./ mysqrt.(χ)  .+ λ .* f_y)) .* 2) .< 1)
+    
 	
-    H_Fr = 1 .- abs2.(f_x .* λ) / 2 .- abs2.(f_y .* λ) / 2 
-	# take the difference here, key part of the ScaledAS
-	ΔH = W .* exp.(1im .* k .* z .* (H_AS .- H_Fr)) 
-	
+    ΔH = W .* exp.(1im .* (-CT(π) .+ CT(2π) .* z .* sqrt.(CT(1) / λ^2  .- (f_x .+ sinxy[2] / λ).^2 .- (f_y .+ sinxy[1] / λ).^2) .+
+                           CT(2π) .* z ./ λ .* ((λ .* f_x).^2 ./ 2 .+ (λ .* f_y).^2 ./ 2) .+ CT(2π) .* z .* (tanxy[1] .* f_y .+ tanxy[2] .* f_x)))
 	
 	# new sample coordinates
 	dq = λ * z / L_new
@@ -78,13 +76,13 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, L, α;
     params = Params(y, x, yp, xp, L, Q/2)
     buffer = similar(ψ_p)
     buffer2 = similar(buffer)
-    return ShiftedScalableAngularSpectrum(ΔH, H₁, H₂, buffer, buffer2, params, FFTplan)
+    return ShiftedScalableAngularSpectrumOP(ΔH, H₁, H₂, buffer, buffer2, params, FFTplan)
 end
 
 
 
 
-function (sas::ShiftedScalableAngularSpectrum)(ψ::AbstractArray{T}; return_view=false) where T
+function (sas::ShiftedScalableAngularSpectrumOP)(ψ::AbstractArray{T}; return_view=false) where T
     p = sas.FFTplan
     fill!(sas.buffer2, 0)
     ψ_p = set_center!(sas.buffer2, ψ)
@@ -102,6 +100,7 @@ function (sas::ShiftedScalableAngularSpectrum)(ψ::AbstractArray{T}; return_view
     fftshift!(sas.buffer2, ψ_p_final)
 
 	ψ_final = crop_center(sas.buffer2, size(ψ); return_view)
-    return ψ_final, (; sas.L)
+    return ψ_final
 end
+
 
