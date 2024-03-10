@@ -84,7 +84,6 @@ Returns the electrical field with physical length `L` and wavelength `λ` propag
 
 # Keyword Arguments 
 * `skip_final_phase=true`: avoid multiplying with final phase. This phase is also undersampled.
-* `bandlimit_border=(0.8, 1)`: apply soft bandlimit instead of hard cutoff
 
 
 # Example
@@ -112,9 +111,8 @@ julia> 10f-3 * 633f-9 * 256 / 500f-6^2 / 2 # equation from paper
 * [Rainer Heintzmann, Lars Loetgering, and Felix Wechsler, "Scalable angular spectrum propagation," Optica 10, 1407-1416 (2023)](https://opg.optica.org/optica/viewmedia.cfm?uri=optica-10-11-1407&html=true) 
 """
 function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ; 
-								 skip_final_phase=true, bandlimit_soft_px=20,
-								  bandlimit_border=(0.8, 1)) where {T} 
-	@assert bandlimit_soft_px ≥ 0 "bandlimit_soft_px must be ≥ 0"
+								 skip_final_phase=true) where {T} 
+	#@assert bandlimit_soft_px ≥ 0 "bandlimit_soft_px must be ≥ 0"
 	@assert size(ψ₀, 1) == size(ψ₀, 2) "Restricted to auadratic fields."
     
     pad_factor = 2
@@ -142,11 +140,13 @@ function ScalableAngularSpectrum(ψ₀::AbstractArray{T}, z, λ, L ;
 	smooth_f(x, α, β) = hann(scale(x, α, β))
 	# find boundary for soft hann
 	ineq_x = fftshift(cx[1, :].^2 .* (1 .+ tx[1, :].^2) ./ tx[1, :].^2 .+ cy[1, :].^2)
-	limits = find_width_window(ineq_x, bandlimit_border)
+	#limits = find_width_window(ineq_x, bandlimit_border)
 	
 	# bandlimit filter for precompensation
-	W = .*(smooth_f.(cx.^2 .* (1 .+ tx.^2) ./ tx.^2 .+ cy.^2, limits...),
-			smooth_f.(cy.^2 .* (1 .+ ty.^2) ./ ty.^2 .+ cx.^2, limits...))
+	#W = .*(smooth_f.(cx.^2 .* (1 .+ tx.^2) ./ tx.^2 .+ cy.^2, limits...),
+#			smooth_f.(cy.^2 .* (1 .+ ty.^2) ./ ty.^2 .+ cx.^2, limits...))
+	W = .*((cx.^2 .* (1 .+ tx.^2) ./ tx.^2 .+ cy.^2) .<= 1,
+           (cy.^2 .* (1 .+ ty.^2) ./ ty.^2 .+ cx.^2) .<= 1)
 	
 	# ΔH is the core part of Fresnel and AS
 	H_AS = sqrt.(0im .+ 1 .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)) 
