@@ -35,15 +35,15 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, _L, _α
 
     mysqrt(x) = sqrt(max(0, x))
     Δf = (1 / L_new, 1 / L_new)
-    χ = 1 / λ^2 .- (f_x .+ sinxy[2] / λ).^2 .- (f_y .+ sinxy[1] / λ).^2
-    W = (abs.(Δf[2] .* (z .* (tanxy[2] .- (f_x .+ sinxy[2] ./ λ) ./ mysqrt.(χ)  .+ λ .* f_x)) .* 2) .< 1) .* 
-        (abs.(Δf[1] .* (z .* (tanxy[1] .- (f_y .+ sinxy[1] ./ λ) ./ mysqrt.(χ)  .+ λ .* f_y)) .* 2) .< 1)
+    χ = 1 .- abs2.(f_x .* λ .+ sinxy[2]) .- abs2.(f_y .* λ .+ sinxy[1])
+    W = ((abs.(Δf[2] .* k .* z .* (.-(λ .* f_x .+ sinxy[2]) .* λ ./ mysqrt.(χ) .+ λ .* tanxy[2] .+ f_x .* λ^2) .* 2 ./ 2 / CT(π)) .< 1) .* 
+         (abs.(Δf[1] .* k .* z .* (.-(λ .* f_y .+ sinxy[1]) .* λ ./ mysqrt.(χ) .+ λ .* tanxy[1] .+ f_y .* λ^2) .* 2 ./ 2 / CT(π)) .< 1)) 
     
 
     H_AS = (sqrt.(CT(1) .- abs2.(f_x .* λ .+ sinxy[2]) .- abs2.(f_y .* λ .+ sinxy[1])
                  .+ λ .* (tanxy[2] .* f_x .+ tanxy[1] .* f_y)))
 	
-    H_Fr = 1 .- abs2.(f_x .* λ) / 2 .- abs2.(f_y .* λ) / 2 
+    H_Fr = 1 .- abs2.(f_x .* λ) / 2 .- abs2.(f_y .* λ) / 2
 
 	# take the difference here, key part of the ScaledAS
 	ΔH = W .* exp.(1im .* k .* z .* (H_AS .- H_Fr)) 
@@ -64,7 +64,7 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, _L, _α
     q_x .= q_yx_shift[2] .+ q_y'
 	
 	# calculate phases of Fresnel
-	H₁ = exp.(1im .* k ./ (2 .* z) .* (x .^ 2 .+ y .^ 2))
+    H₁ = exp.(1im .* k ./ (2 .* z) .* ((x) .^ 2 .+ (y) .^ 1 ))
 	
 	# skip final phase because often undersampled
 	if skip_final_phase
