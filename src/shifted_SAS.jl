@@ -39,9 +39,18 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, _L, _α
     W = (abs.(Δf[2] .* (z .* (tanxy[2] .- (f_x .+ sinxy[2] ./ λ) ./ mysqrt.(χ)  .+ λ .* f_x)) .* 2) .< 1) .* 
         (abs.(Δf[1] .* (z .* (tanxy[1] .- (f_y .+ sinxy[1] ./ λ) ./ mysqrt.(χ)  .+ λ .* f_y)) .* 2) .< 1)
     
+
+    H_AS = (sqrt.(CT(1) .- abs2.(f_x .* λ .+ sinxy[2]) .- abs2.(f_y .* λ .+ sinxy[1])
+                 .+ λ .* (tanxy[2] .* f_x .+ tanxy[1] .* f_y)))
 	
-    ΔH = W .* exp.(1im .* (-CT(π) .+ CT(2π) .* z .* sqrt.(CT(1) / λ^2  .- (f_x .+ sinxy[2] / λ).^2 .- (f_y .+ sinxy[1] / λ).^2) .+
-                           CT(2π) .* z ./ λ .* ((λ .* f_x).^2 ./ 2 .+ (λ .* f_y).^2 ./ 2) .+ CT(2π) .* z .* (tanxy[1] .* f_y .+ tanxy[2] .* f_x)))
+    H_Fr = 1 .- abs2.(f_x .* λ) / 2 .- abs2.(f_y .* λ) / 2 
+
+	# take the difference here, key part of the ScaledAS
+	ΔH = W .* exp.(1im .* k .* z .* (H_AS .- H_Fr)) 
+	#ΔH = W .* exp.(1im .* k .* z .* (H_AS .+ H_Fr)) 
+	
+    #ΔH = W .* exp.(1im .* (CT(2π) .* z .* sqrt.(CT(1) / λ.^2  .- (f_x .+ sinxy[2] / λ).^2 .- (f_y .+ sinxy[1] / λ).^2) .-
+    #                       CT(2π) .* z ./ λ .* ((λ .* f_x).^2 ./ 2 .+ (λ .* f_y).^2 ./ 2) .+ CT(2π) .* z .* (tanxy[1] .* f_y .+ tanxy[2] .* f_x)))
 	
 	# new sample coordinates
 	dq = λ * z / L_new
@@ -102,5 +111,4 @@ function (sas::ShiftedScalableAngularSpectrumOP)(ψ::AbstractArray{T}; return_vi
 	ψ_final = crop_center(sas.buffer2, size(ψ); return_view)
     return ψ_final
 end
-
 

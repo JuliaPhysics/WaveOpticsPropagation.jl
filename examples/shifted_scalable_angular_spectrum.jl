@@ -51,28 +51,25 @@ y = fftpos(L[1], N, CenterFT)
 field = box(Float32, sz, (20,20)) .* exp.(1im .* 2f0 * π ./ λ .* y .* sin(α));
 
 # ╔═╡ 9c9560ca-d6c4-4fe8-9ac9-4de73e6af038
-z = 200f-6
+z = 50f-6
+
+# ╔═╡ 8bd4b453-8f6c-4270-98ea-ffbb97489f29
+M = λ * z / L^2 * size(field, 1) / 2
 
 # ╔═╡ 3cd421df-5f7b-4e48-b13e-35480200d4a7
 simshow(field)
 
 # ╔═╡ 8dd05266-5383-408b-a747-b50a0f4fba66
-res_AS = AngularSpectrum(field, z, λ, L)(field)[1];
+res_AS = AngularSpectrum(field, z, λ, L)(field);
 
 # ╔═╡ 50f75305-9107-4495-8ae9-68cd11498e16
-res = ShiftedAngularSpectrum(field, z, λ, L, (α , 0), bandlimit=true)(field)
+res = ShiftedAngularSpectrum(field, z, λ, L, (α , 0), bandlimit=true)(field);
 
 # ╔═╡ c95c1b1e-7645-4488-883e-e45be15717d8
-res2 = WaveOpticsPropagation.ShiftedScalableAngularSpectrum(field, z, λ, L, (α , 0))(field)
+res2 = WaveOpticsPropagation.ShiftedScalableAngularSpectrum(field, z, λ, L, (deg2rad(α) , 0))(field);
 
 # ╔═╡ 2e41d692-4705-47f1-81f9-8e388d265847
-res3 = WaveOpticsPropagation.ScalableAngularSpectrum(field, z, λ, L)[1](field)
-
-# ╔═╡ 1be83926-2d7a-49e9-8b2b-9055d67c87ea
-z * λ / L^2 * size(field,1)
-
-# ╔═╡ 016cde31-2cf7-4f56-b7d1-e4f709b2183e
-Revise.errors()
+res3 = WaveOpticsPropagation.ScalableAngularSpectrum(field, z, λ, L)(field);
 
 # ╔═╡ 50055786-7728-4580-81e5-4ebb2e05626b
 shift = (z .* tan.(α) ./ L .* N)[1]
@@ -81,16 +78,31 @@ shift = (z .* tan.(α) ./ L .* N)[1]
 shift2 = z .* tan.(α) ./ L
 
 # ╔═╡ 888cff79-9df6-4bb6-bdef-bf42ad0385cb
-simshow(res2[1])
+simshow(abs2.(res3))
 
-# ╔═╡ 3e012a80-466f-4ffe-ba80-8bd99e5fe230
-
+# ╔═╡ a6f0aae0-2a90-48c2-8a67-1407576cc1ba
+simshow(abs2.(res))
 
 # ╔═╡ ba3721fa-9eae-4dc4-ae36-765ce2b4bd5a
-simshow(res3[1])
+simshow(abs2.(res2), γ=1)
+
+# ╔═╡ ab8a3aa5-ca88-4225-b980-5ec14bfd7a86
+@mytime SSAS =  WaveOpticsPropagation.ShiftedScalableAngularSpectrum(field, z, λ, L, (α , 0));
+
+# ╔═╡ 942f76ba-9046-4c2e-9572-836d8269bde1
+@mytime SAS =  WaveOpticsPropagation.ScalableAngularSpectrum(field, z, λ, L);
+
+# ╔═╡ 54441170-9310-411e-89dd-a58351469e04
+simshow(fftshift(SSAS.ΔH), γ=1)
+
+# ╔═╡ 1f6bf5e1-39a5-4fc9-a9ad-5a988a004bf9
+simshow(fftshift(SAS.ΔH), γ=1)
 
 # ╔═╡ 0dbc516f-34f3-4047-b3db-d96147b22b13
-[simshow(res[1][round(Int, shift)+1:end, :], γ=1) simshow(FourierTools.shift(res[1], (shift, 0))[round(Int, shift)+1:end, :], γ=1) simshow(res_AS[round(Int, shift)+1:end, :], γ=1)]
+[simshow(res[round(Int, shift)+1:end, :], γ=1) simshow(FourierTools.shift(res, (shift, 0))[round(Int, shift)+1:end, :], γ=1) simshow(res_AS[round(Int, shift)+1:end, :], γ=1)]
+
+# ╔═╡ 1c779d41-29e3-4ea0-a2f7-4e36297679a1
+ simshow(res_AS[round(Int, shift)+1:end, :], γ=1)
 
 # ╔═╡ Cell order:
 # ╠═59413ae0-c2ce-11ee-31f3-c52d9d263afb
@@ -106,16 +118,20 @@ simshow(res3[1])
 # ╠═c487f254-5f32-4e8b-94d7-f18c45a2a3ca
 # ╠═5a06d1f8-ce32-4510-adc2-862a6c48a479
 # ╠═9c9560ca-d6c4-4fe8-9ac9-4de73e6af038
+# ╠═8bd4b453-8f6c-4270-98ea-ffbb97489f29
 # ╠═3cd421df-5f7b-4e48-b13e-35480200d4a7
 # ╠═8dd05266-5383-408b-a747-b50a0f4fba66
 # ╠═50f75305-9107-4495-8ae9-68cd11498e16
 # ╠═c95c1b1e-7645-4488-883e-e45be15717d8
 # ╠═2e41d692-4705-47f1-81f9-8e388d265847
-# ╠═1be83926-2d7a-49e9-8b2b-9055d67c87ea
-# ╠═016cde31-2cf7-4f56-b7d1-e4f709b2183e
 # ╠═50055786-7728-4580-81e5-4ebb2e05626b
 # ╠═4a49a6e5-b50d-4d65-ad1a-75eda9b1a280
 # ╠═888cff79-9df6-4bb6-bdef-bf42ad0385cb
-# ╠═3e012a80-466f-4ffe-ba80-8bd99e5fe230
+# ╠═a6f0aae0-2a90-48c2-8a67-1407576cc1ba
 # ╠═ba3721fa-9eae-4dc4-ae36-765ce2b4bd5a
+# ╠═ab8a3aa5-ca88-4225-b980-5ec14bfd7a86
+# ╠═942f76ba-9046-4c2e-9572-836d8269bde1
+# ╠═54441170-9310-411e-89dd-a58351469e04
+# ╠═1f6bf5e1-39a5-4fc9-a9ad-5a988a004bf9
 # ╠═0dbc516f-34f3-4047-b3db-d96147b22b13
+# ╠═1c779d41-29e3-4ea0-a2f7-4e36297679a1
