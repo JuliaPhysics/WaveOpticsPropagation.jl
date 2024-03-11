@@ -64,7 +64,7 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, _L, _α
     q_x .= q_yx_shift[2] .+ q_y'
 	
 	# calculate phases of Fresnel
-    H₁ = exp.(1im .* k ./ (2 .* z) .* ((x) .^ 2 .+ (y) .^ 1 ))
+    H₁ = exp.(1im .* k ./ (2 .* z) .* ((x) .^ 2 .+ (y) .^ 2 ))
 	
 	# skip final phase because often undersampled
 	if skip_final_phase
