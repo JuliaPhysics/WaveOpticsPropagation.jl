@@ -35,13 +35,14 @@ function ShiftedScalableAngularSpectrum(ψ₀::AbstractArray{CT}, z, λ, _L, _α
 
     mysqrt(x) = sqrt(max(0, x))
     Δf = (1 / L_new, 1 / L_new)
-    χ = 1 .- abs2.(f_x .* λ .+ sinxy[2]) .- abs2.(f_y .* λ .+ sinxy[1])
-    W = ((abs.(Δf[2] .* k .* z .* (.-(λ .* f_x .+ sinxy[2]) .* λ ./ mysqrt.(χ) .+ λ .* tanxy[2] .+ f_x .* λ^2) .* 2 ./ 2 / CT(π)) .< 1) .* 
-         (abs.(Δf[1] .* k .* z .* (.-(λ .* f_y .+ sinxy[1]) .* λ ./ mysqrt.(χ) .+ λ .* tanxy[1] .+ f_y .* λ^2) .* 2 ./ 2 / CT(π)) .< 1)) 
+    χ = 1 / λ^2 .- abs2.(f_x .+ sinxy[2] / λ) .- abs2.(f_y .+ sinxy[1] / λ)
+    Ωx = z .* (tanxy[2] .- (f_x .+ sinxy[2] / λ) ./ mysqrt.(χ) .+ λ .* f_x)
+    Ωy = z .* (tanxy[1] .- (f_y .+ sinxy[1] / λ) ./ mysqrt.(χ) .+ λ .* f_y)
+    W = (Δf[1] .<= 1 ./ abs.(2 .* Ωx)) .* (Δf[2] .<= 1 ./ abs.(2 .* Ωy))
     
 
-    H_AS = (sqrt.(CT(1) .- abs2.(f_x .* λ .+ sinxy[2]) .- abs2.(f_y .* λ .+ sinxy[1])
-                 .+ λ .* (tanxy[2] .* f_x .+ tanxy[1] .* f_y)))
+    H_AS = (sqrt.(CT(1) .- abs2.(f_x .* λ .+ sinxy[2]) .- abs2.(f_y .* λ .+ sinxy[1]))
+                 .+ λ .* (tanxy[2] .* f_x .+ tanxy[1] .* f_y))
 	
     H_Fr = 1 .- abs2.(f_x .* λ) / 2 .- abs2.(f_y .* λ) / 2
 
