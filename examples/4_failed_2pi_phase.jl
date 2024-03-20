@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.38
+# v0.19.40
 
 using Markdown
 using InteractiveUtils
@@ -115,8 +115,8 @@ I2 = abs2.(lens(field .* phase_clipped));
 
 # ╔═╡ a6edb05d-ae9c-4e21-84aa-f63d3ae35e74
 begin
-	plot(normf(I1[sz[1]÷2+1,:]).^0.2, label="Ideal")
-	plot!(normf(I2[sz[1]÷2+1,:]).^0.2, label="Clipped Phase")
+	plot(normf(I1[sz[1]÷2+1,:]).^1, label="Ideal")
+	plot!(normf(I2[sz[1]÷2+1,:]).^1, label="Clipped Phase")
 end
 
 # ╔═╡ 7ae7a052-d991-47ab-872a-3b72c132d524
