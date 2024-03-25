@@ -195,19 +195,19 @@ function AngularSpectrum(field::AbstractArray{CT, N}, z, λ, L;
 Uses the struct to efficiently store some pre-calculated objects.
 Propagate the field.
 """
-function (as::AngularSpectrum3)(field)
+function (as::AngularSpectrum3)(field; crop=true)
     fill!(as.buffer2, 0)
     fieldp = set_center!(as.buffer2, field, broadcast=true)
     field_imd = as.p * ifftshift!(as.buffer, fieldp, (1, 2))
     field_imd .*= as.HW
     field_out = fftshift!(as.buffer2, inv(as.p) * field_imd, (1, 2))
-    field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
+    field_out_cropped = as.padding && crop ? crop_center(field_out, size(field), return_view=true) : field_out
     return field_out_cropped
 end
 
 
-function ChainRulesCore.rrule(as::AngularSpectrum3, field)
-    field_and_tuple = as(field) 
+function ChainRulesCore.rrule(as::AngularSpectrum3, field; crop=true)
+    field_and_tuple = as(field, crop=crop)
     function as_pullback(ȳ)
         f̄ = NoTangent()
         # i tried to fix this once, but we somehow the Tangent type is missing the dimensionality
@@ -222,9 +222,9 @@ function ChainRulesCore.rrule(as::AngularSpectrum3, field)
         # that means z is a vector and we do plane to volume propagation
         if size(as.buffer, 3) > 1 && ndims(field) == 2
             sum!(view(as.buffer, :, :, 1), field_out)
-            field_out_cropped = as.padding ? crop_center(view(as.buffer, :, :, 1), size(field), return_view=true) : view(as.buffer, :, :, 1) 
+            field_out_cropped = as.padding && crop ? crop_center(view(as.buffer, :, :, 1), size(field), return_view=true) : view(as.buffer, :, :, 1) 
         else
-            field_out_cropped = as.padding ? crop_center(field_out, size(field), return_view=true) : field_out
+            field_out_cropped = as.padding && crop ? crop_center(field_out, size(field), return_view=true) : field_out
         end
         return f̄, field_out_cropped 
     end
