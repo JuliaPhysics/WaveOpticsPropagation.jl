@@ -15,7 +15,7 @@
 	mid = N ÷ 2+ 1
 	slit[:, mid-ΔS-ΔW:mid-ΔS+ΔW] .= 1
 	slit[:, mid+ΔS-ΔW:mid+ΔS+ΔW] .= 1
-    output = fraunhofer(slit, z, λ, L)
+    output = WaveOpticsPropagation.fraunhofer(slit, z, λ, L)
 
     efficient_fraunhofer = Fraunhofer(slit, z, λ, L);
     output2 = efficient_fraunhofer(slit)
@@ -34,13 +34,13 @@
     arr = randn(ComplexF32, (N, N))
     fr = Fraunhofer(arr, z, λ, L)
     f(x) = sum(abs2, arr .- fr(x)) 
-    f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L))
+    f2(x) = sum(abs2, arr .- WaveOpticsPropagation.fraunhofer(x, z, λ, L))
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]
 
     arr = randn(ComplexF32, (15, 15))
     fr = Fraunhofer(arr, z, λ, L, skip_final_phase=false)
     f(x) = sum(abs2, arr .- fr(x)[1]) 
-    f2(x) = sum(abs2, arr .- fraunhofer(x, z, λ, L, skip_final_phase=false)[1])
+    f2(x) = sum(abs2, arr .- WaveOpticsPropagation.fraunhofer(x, z, λ, L, skip_final_phase=false)[1])
     @test Zygote.gradient(f, arr)[1] ≈ Zygote.gradient(f2, arr)[1]
 
 
