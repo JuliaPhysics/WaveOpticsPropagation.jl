@@ -123,11 +123,11 @@ method of plane waves (AS) by the propagation distance `z`.
 # Examples
 ```jldoctest
 julia> field = zeros(ComplexF32, (4,4)); field[3,3] = 1
+1
 
-julia> AS, _ = ShiftedAngularSpectrum(field, 100e-6, 633e-9, 100e-6, (deg2rad(10), 0));
+julia> shifted_AS = ShiftedAngularSpectrum(field, 100e-6, 633e-9, 100e-6, (deg2rad(10), 0));
 
-julia> AS(field)
-(ComplexF32[1.5269792f-5 + 1.7594219f-5im -3.996831f-5 - 7.624799f-5im -0.0047351345f0 + 0.002100923f0im -3.996831f-5 - 7.624799f-5im; -8.294997f-5 - 1.8230454f-5im 0.00028230582f0 + 8.1745195f-5im 0.0051693693f0 - 0.016958509f0im 0.00028230582f0 + 8.1745195f-5im; 0.0029884572f0 + 0.0040671355f0im -0.009686601f0 - 0.014245203f0im -0.82990384f0 + 0.5566719f0im -0.009686601f0 - 0.014245203f0im; -1.4191573f-7 + 9.41665f-5im 2.111472f-5 - 0.00031620878f0im -0.017670793f0 - 0.0014212304f0im 2.111472f-5 - 0.00031620878f0im], (L = 0.0001, shift = (0.17632698070846498, 0.0)))
+julia> shifted_AS(field);
 ```
 
 # References

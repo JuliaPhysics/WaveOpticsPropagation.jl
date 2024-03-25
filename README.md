@@ -15,14 +15,13 @@ Those functions are fast and memory efficient implemented and hence are suited t
 
 
 ## Installation
-Not registered yet, hence install with:
+Officially registered, so install with:
 ```julia
 julia> using Pkg; Pkg.add("WaveOpticsPropagation")
 ```
 
 ## Examples
-See [the rendered notebooks here](https://juliaphysics.github.io/WaveOpticsPropagation.jl/).
-Otherwise, just look into the [examples folder](examples/).
+Look into the [examples folder](examples/).
 
 ## Features
 ### Implemented

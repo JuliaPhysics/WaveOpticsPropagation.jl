@@ -90,17 +90,12 @@ Returns the electrical field with physical length `L` and wavelength `λ` propag
 ```jldoctest
 julia> field = zeros(ComplexF32, (256,256)); field[130,130] = 1;
 
-julia> sas, t = ScalableAngularSpectrum(field, 10f-3, 633f-9, 500f-6);
+julia> f = ScalableAngularSpectrum(field, 10f-3, 633f-9, 500f-6);
 
-julia> res, t2 = sas(field);
+julia> f.params.Lp
+0.00162048f0
 
-julia> t2
-(L = 0.00162048f0,)
-
-julia> t
-(L = 0.00162048f0,)
-
-julia> t2.L / 500f-6 # calculate magnification
+julia> f.params.Lp / 500f-6 # calculate magnification
 3.24096f0
 
 julia> 10f-3 * 633f-9 * 256 / 500f-6^2 / 2 # equation from paper
