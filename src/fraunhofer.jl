@@ -69,7 +69,7 @@ function Fraunhofer(U::AbstractArray{CT}, _z::Number, _λ, _L; skip_final_phase=
     λ = real(CT)(_λ)
     z = real(CT)(_z)
     L = real(CT).(_L isa Number ? (_L, _L) : _L)
-    L_new = λ .* z ./ L .* size(U)
+    L_new = λ .* z ./ L .* size(U)[1:2]
 	Ns = size(U)[1:2]
    
     k = eltype(U)(2π) / λ
