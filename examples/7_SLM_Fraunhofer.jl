@@ -17,11 +17,17 @@ end
 # ╔═╡ 9e6d909f-06de-46e7-929a-61bfd67bea26
 using Zygote, WaveOpticsPropagation, FFTW, ImageShow, FiniteDifferences, CUDA, Optim, IndexFunArrays, FourierTools, TestImages, NDTools
 
+# ╔═╡ 4ebbfa83-442c-4e3b-8461-a608de72c66f
+using Noise
+
 # ╔═╡ ef79854f-0ae9-41aa-8f92-aae8d7023d71
 using Plots
 
 # ╔═╡ f9a13d72-f904-467c-8346-a9ef272693ff
 using PlutoUI
+
+# ╔═╡ a4555452-3963-436f-8e1a-5f9d6ad733f8
+using Statistics
 
 # ╔═╡ 34dc58b0-9d8f-4c24-a9f7-1de26ebfc5e0
 md"# Load Packages"
@@ -84,20 +90,20 @@ begin
 
 	diffuser_c2 = CUDA.copy(diffuser_c)
 	diffuser_c .= cis.(diffuser_c)
-	CUDA.@sync diffuser_c[:, :, 1] .= cis.(togoc(0.3 .* rr2(sz, scale=0.05)) .+ 0.0f0 .* diffuser_c2[:, :, 1])
+	CUDA.@sync diffuser_c[:, :, 1] .= cis.(togoc(0.3 .* rr2(sz, scale=0.05)) .+ 0.4f0 .* diffuser_c2[:, :, 1])
 	
-	CUDA.@sync diffuser_c[:, :, 2] .= cis.(togoc(0.2 .*rr2(sz, scale=0.05)) .+ 0.0f0 .* diffuser_c2[:, :, 2])
+	CUDA.@sync diffuser_c[:, :, 2] .= cis.(togoc(0.2 .*rr2(sz, scale=0.05)) .+ 0.4f0 .* diffuser_c2[:, :, 2])
 	
-	CUDA.@sync diffuser_c[:, :, 3] .= cis.(togoc(0.1 .*rr2(sz, scale=0.05)) .+ 0.0f0 .* diffuser_c2[:, :, 3])
+	CUDA.@sync diffuser_c[:, :, 3] .= cis.(togoc(0.1 .*rr2(sz, scale=0.05)) .+ 0.4f0 .* diffuser_c2[:, :, 3])
 	
-	CUDA.@sync diffuser_c[:, :, 4] .= cis.(togoc(0.3 .*rr2(sz, scale=0.05)) .+ 1.3f0 .* diffuser_c2[:, :, 4])
-end
+	CUDA.@sync diffuser_c[:, :, 4] .= cis.(togoc(0.3 .*rr2(sz, scale=0.05)) .+ 1.0f0 .* diffuser_c2[:, :, 4])
+end;
 
 # ╔═╡ d058c9ba-82ec-4f1e-8938-eb9e1e95b713
 fraunhofer = Fraunhofer(beam .* diffuser_c, z, λ, L)
 
 # ╔═╡ 30eef203-9725-434b-b3e5-99df65c5d113
-fraunhofer.params.Lp
+fraunhofer.params.Lp ./ sz[1]
 
 # ╔═╡ 5d21e0bc-ea6e-4b2c-8977-d1761d1b3c65
 fraunhofer(beam .* diffuser_c) ./ fftshift(fft(ifftshift(beam .* diffuser_c, (1,2)), (1,2)), (1,2));
@@ -128,15 +134,23 @@ md"# Set up Optimization"
 # ╔═╡ d219be8b-2d22-4fbe-b022-217edfeec5dc
 function make_fg!(fwd, measured, loss=:L2)
     L2 = let measured=measured, fwd=fwd
-        function L2(x)
+	    function L2(x)
             return sum(abs2, fwd(x) .- measured)
 		end
     end
 
+	anscombe =  let measured=measured, fwd=fwd
+        function anscombe(x)
+            return sum(abs2, 2 .* sqrt.(fwd(x) .+ 3f0 / 8) .- 2 .* sqrt.(measured .+ 3f0 ./ 8))
+		end
+    end
+	
     f = let 
         if loss == :L2
             L2
-        end
+		elseif loss == :anscombe
+			anscombe
+		end
     end
 
     g! = let f=f
@@ -152,9 +166,12 @@ end
 # ╔═╡ 692e0263-8273-45a6-b3e6-c30bbeaeb649
 begin
 	measurement_c = fwd(beam)
-	measurement_c .*= togoc(rand(size(measurement_c)...)) ./ 3 .+ 1
-	measurement_c .= abs.(measurement_c);
+	measurement_c .= togoc(poisson(Array(measurement_c), 50_000))
+	measurement_c .= togoc(quantization(Array(measurement_c), 256, maxv=maximum(measurement_c)))
 end;
+
+# ╔═╡ 7ea48e4f-ad35-4ed6-9367-64ce5d1f0ca4
+quantization([0.0, 13, 30], 10)
 
 # ╔═╡ 0310a538-c82d-412d-9f60-576c416b17dd
 extrema(measurement_c)
@@ -165,6 +182,9 @@ extrema(measurement_c)
 # ╔═╡ 56a03baf-3873-43d5-b8c1-8569de6026b0
 simshow(Array(measurement_c)[:, :, iz], γ=1, cmap=:turbo)
 
+# ╔═╡ 25627a6d-c2f4-43bc-bf4a-325024b2db8c
+maximum(measurement_c)
+
 # ╔═╡ de16936c-7774-4aab-9702-f0cf4fa660fd
 md"# Optimize!"
 
@@ -172,11 +192,11 @@ md"# Optimize!"
 rec0 = togoc(ones(ComplexF32, sz));
 
 # ╔═╡ d90bff7e-150d-407d-a510-385fd5a32df3
-f, g! = make_fg!(fwd, measurement_c)
+f, g! = make_fg!(fwd, measurement_c, :anscombe)
 
 # ╔═╡ 05b63595-61dd-416f-8610-0f6ee1919a6f
 @mytime res = Optim.optimize(f, g!, rec0, LBFGS(),
-                                 Optim.Options(iterations = 50,  
+                                 Optim.Options(iterations = 20,  
                                                store_trace=true))
 
 # ╔═╡ ec93edb8-5877-4de2-95d9-6bf85ad135a0
@@ -185,6 +205,9 @@ md"# Analyze Results"
 # ╔═╡ 9ed4c43f-1ad5-43b1-bef6-40faf027207d
 plot([t.iteration for t in res.trace], [t.value for t in res.trace], label="LBFGS", yaxis=:log, ylabel="loss", xlabel="iteration")
 
+# ╔═╡ 6c43635a-dac1-48c8-9736-0e8e66ab625e
+sum(abs2, measurement_c .- fwd(res.minimizer))
+
 # ╔═╡ cf15e57a-9c3d-4751-bace-68611ff602ba
 bb = beam ./ sum(select_region((beam), M = 1/8));
 
@@ -192,7 +215,7 @@ bb = beam ./ sum(select_region((beam), M = 1/8));
 rm = res.minimizer ./ sum(select_region((res.minimizer), M = 1/8));
 
 # ╔═╡ 5372b296-75d6-497d-b6c9-e2f104e76522
-[simshow(Array(rm), γ=1) simshow(Array(bb), γ=1)]
+[simshow(Array(rm), γ=0.5) simshow(Array(bb), γ=0.5)]
 
 # ╔═╡ 1d7cda5a-01a8-4bf7-a744-ce9df9f4ab04
 @bind i4 Slider(1:2)
@@ -210,9 +233,11 @@ FourierTools = "b18b359b-aebc-45ac-a139-9c0ccbb2871e"
 ImageShow = "4e3cecfd-b093-5904-9786-8bbb286a6a31"
 IndexFunArrays = "613c443e-d742-454e-bfc6-1d7f8dd76566"
 NDTools = "98581153-e998-4eef-8d0d-5ec2c052313d"
+Noise = "81d43f40-5267-43b7-ae1c-8b967f377efa"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
 WaveOpticsPropagation = "c4c7a1f9-3adc-4a73-843a-d378b6c86436"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
@@ -225,6 +250,7 @@ FourierTools = "~0.4.3"
 ImageShow = "~0.3.8"
 IndexFunArrays = "~0.2.7"
 NDTools = "~0.6.0"
+Noise = "~0.3.3"
 Optim = "~1.9.4"
 Plots = "~1.40.4"
 PlutoUI = "~0.7.59"
@@ -239,7 +265,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "b5ff530c9df8df17a491eae0b285f699e8e14cc2"
+project_hash = "de3e9ebc61df4b2d2dc5478a0aac6ab50457288c"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1371,6 +1397,12 @@ version = "1.1.1"
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
 
+[[deps.Noise]]
+deps = ["ImageCore", "PoissonRandom", "Random"]
+git-tree-sha1 = "d34a07459e1ebdc6b551ecb28e3c19993f544d91"
+uuid = "81d43f40-5267-43b7-ae1c-8b967f377efa"
+version = "0.3.3"
+
 [[deps.OffsetArrays]]
 git-tree-sha1 = "e64b4f5ea6b7389f6f046d13d4896a8f9c1ba71e"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
@@ -1543,6 +1575,12 @@ deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNu
 git-tree-sha1 = "ab55ee1510ad2af0ff674dbcced5e94921f867a9"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.59"
+
+[[deps.PoissonRandom]]
+deps = ["Random"]
+git-tree-sha1 = "a0f1159c33f846aa77c3f30ebbc69795e5327152"
+uuid = "e409e4f3-bfea-5376-8464-e040bb5c01ab"
+version = "0.4.4"
 
 [[deps.PooledArrays]]
 deps = ["DataAPI", "Future"]
@@ -2329,6 +2367,7 @@ version = "1.4.1+1"
 # ╔═╡ Cell order:
 # ╟─34dc58b0-9d8f-4c24-a9f7-1de26ebfc5e0
 # ╠═9e6d909f-06de-46e7-929a-61bfd67bea26
+# ╠═4ebbfa83-442c-4e3b-8461-a608de72c66f
 # ╠═20c5faa9-5694-42fd-b1bb-0c5093f6c93c
 # ╠═ef79854f-0ae9-41aa-8f92-aae8d7023d71
 # ╠═f9a13d72-f904-467c-8346-a9ef272693ff
@@ -2358,15 +2397,19 @@ version = "1.4.1+1"
 # ╟─d84457d3-30ae-4711-b47f-7d2a7376a237
 # ╠═d219be8b-2d22-4fbe-b022-217edfeec5dc
 # ╠═692e0263-8273-45a6-b3e6-c30bbeaeb649
+# ╠═7ea48e4f-ad35-4ed6-9367-64ce5d1f0ca4
 # ╠═0310a538-c82d-412d-9f60-576c416b17dd
 # ╠═5c550775-a614-44dc-a81d-638448d23067
 # ╠═56a03baf-3873-43d5-b8c1-8569de6026b0
+# ╠═25627a6d-c2f4-43bc-bf4a-325024b2db8c
+# ╠═a4555452-3963-436f-8e1a-5f9d6ad733f8
 # ╟─de16936c-7774-4aab-9702-f0cf4fa660fd
 # ╠═ee5260f3-d3a4-4bf2-8b54-31723c3c516f
 # ╠═d90bff7e-150d-407d-a510-385fd5a32df3
 # ╠═05b63595-61dd-416f-8610-0f6ee1919a6f
 # ╟─ec93edb8-5877-4de2-95d9-6bf85ad135a0
 # ╠═9ed4c43f-1ad5-43b1-bef6-40faf027207d
+# ╠═6c43635a-dac1-48c8-9736-0e8e66ab625e
 # ╠═cf15e57a-9c3d-4751-bace-68611ff602ba
 # ╠═150679b3-79f6-426b-99ca-8bc179877af6
 # ╠═5372b296-75d6-497d-b6c9-e2f104e76522
