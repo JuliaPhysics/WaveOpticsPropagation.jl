@@ -81,7 +81,7 @@ As forward model, we use different defocus patterns and diffuser noise
 "
 
 # ╔═╡ e52cfcd8-eec8-4a8b-b953-f1c6ef2be959
-N = 8
+N = 20
 
 # ╔═╡ 42c00ce2-d1e4-4f84-84be-a7e4cd6551ce
 begin
@@ -167,7 +167,7 @@ end
 begin
 	measurement_c = fwd(beam)
 	measurement_c .= togoc(poisson(Array(measurement_c), 50_000))
-	measurement_c .= togoc(quantization(Array(measurement_c), 256, maxv=maximum(measurement_c)))
+	measurement_c .= togoc(quantization(Array(measurement_c), 256, maxv=1.5 * maximum(measurement_c)))
 end;
 
 # ╔═╡ 7ea48e4f-ad35-4ed6-9367-64ce5d1f0ca4
@@ -196,7 +196,7 @@ f, g! = make_fg!(fwd, measurement_c, :anscombe)
 
 # ╔═╡ 05b63595-61dd-416f-8610-0f6ee1919a6f
 @mytime res = Optim.optimize(f, g!, rec0, LBFGS(),
-                                 Optim.Options(iterations = 20,  
+                                 Optim.Options(iterations = 25,  
                                                store_trace=true))
 
 # ╔═╡ ec93edb8-5877-4de2-95d9-6bf85ad135a0
