@@ -21,7 +21,7 @@ FFTW = "1"
 FourierTools = "0.4"
 IndexFunArrays = "0.2"
 NDTools = "0.5, 0.6, 0.7"
-Zygote = "0.6.60"
+Zygote = "0.6.60, 0.7"
 julia = "1.9"
 
 [extras]
