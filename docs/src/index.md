@@ -1,7 +1,3 @@
-```@raw html
-<a  href="../docs/logo/logo.png"><img src="../docs/logo/logo.png"  width="150"></a>
-```
-
 # WaveOpticsPropagation.jl
 
 Propagate waves efficiently, optically, physically, differentiably with [Julia Lang](https://julialang.org/).
