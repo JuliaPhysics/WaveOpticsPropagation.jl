@@ -1,9 +1,8 @@
 ```@raw html
 <a  href="../docs/logo/logo.png"><img src="../docs/logo/logo.png"  width="150"></a>
-``` ⠀
+```
 
 # WaveOpticsPropagation.jl
-
 
 Propagate waves efficiently, optically, physically, differentiably with [Julia Lang](https://julialang.org/).
 Those functions are fast and memory efficient implemented and hence are suited to be used in inverse problems.
@@ -11,7 +10,7 @@ Those functions are fast and memory efficient implemented and hence are suited t
 
 ## Installation
 Officially registered, so install with:
-```julia
+```julia-repl
 julia> using Pkg; Pkg.add("WaveOpticsPropagation")
 ```
 
@@ -39,7 +38,7 @@ But of course, each vectorial component can be propagated separately.
 This package was created as part of scientific work. Please consider citing it :)
 ```bibtex
 @misc{wechsler2024wave,
-      title={Wave optical model for tomographic volumetric additive manufacturing}, 
+      title={Wave optical model for tomographic volumetric additive manufacturing},
       author={Felix Wechsler and Carlo Gigli and Jorge Madrid-Wolff and Christophe Moser},
       year={2024},
       eprint={2402.06283},
