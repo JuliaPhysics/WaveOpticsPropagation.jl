@@ -152,7 +152,7 @@ See also [`crop_center`](@ref), [`pad`](@ref), [`set_center!`](@ref).
 
 # Keyword
 * If `broadcast==false` then a lower dimensional `arr_small` will not be broadcasted
-along the higher dimensions.
+  along the higher dimensions.
 * If `broadcast==true` it will be broadcasted along higher dims.
 
 
