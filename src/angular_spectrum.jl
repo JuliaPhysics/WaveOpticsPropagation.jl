@@ -28,7 +28,7 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, _L;
 	fieldp = padding ? pad(field, pad_factor2) : field
 	
 	# helpful propagation variables
-	(; k, f_x, f_y, x, y) = Zygote.@ignore _propagation_variables(fieldp, λ, Lp)
+	(; k, f_x, f_y, x, y) = ChainRulesCore.@ignore_derivatives _propagation_variables(fieldp, λ, Lp)
 	
 	# transfer function kernel of angular spectrum
     H = exp.(1im .* k .* abs.(z) .* sqrt.(CT(1) .- abs2.(f_x .* λ) .- abs2.(f_y .* λ)))
@@ -40,13 +40,13 @@ function _prepare_angular_spectrum(field::AbstractArray{CT}, z, λ, _L;
 	# as addition we introduce a smooth bandlimit with a Hann window
 	# and fuzzy logic 
 	Δu =   1 ./ Lp
-	u_limit = Zygote.@ignore 1 ./ (sqrt.((2 .* Δu .* z).^2 .+ 1) .* λ)
+	u_limit = ChainRulesCore.@ignore_derivatives 1 ./ (sqrt.((2 .* Δu .* z).^2 .+ 1) .* λ)
 
     # y and x positions in real space, use correct spacing -> fftpos
 	y1 = similar(field, real(eltype(field)), (size(field, 1), 1))
-	Zygote.@ignore y1 .= (fftpos(L[1], size(field, 1), CenterFT))
+	ChainRulesCore.@ignore_derivatives y1 .= (fftpos(L[1], size(field, 1), CenterFT))
 	x1 = similar(field, real(eltype(field)), (1, size(field, 2)))
-	Zygote.@ignore x1 .= (fftpos(L[2], size(field, 2), CenterFT))'
+	ChainRulesCore.@ignore_derivatives x1 .= (fftpos(L[2], size(field, 2), CenterFT))'
 
     params = Params(y1, x1, y1, x1, L, L)
 

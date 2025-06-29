@@ -10,7 +10,7 @@ function fraunhofer(U, z, λ, L; skip_final_phase=true)
     L_new = λ * z / L * size(U, 1)
 	Ns = size(U)[1:2]
     
-    p = Zygote.@ignore plan_fft(U, (1,2))
+    p = ChainRulesCore.@ignore_derivatives plan_fft(U, (1,2))
     
     if skip_final_phase
         out = fftshift(p * ifftshift(U)) ./ √(size(U, 1) * size(U, 2))
@@ -18,9 +18,9 @@ function fraunhofer(U, z, λ, L; skip_final_phase=true)
         k = eltype(U)(2π) / λ
         # output coordinates
         y = similar(U, real(eltype(U)), (Ns[1], 1))
-    	Zygote.@ignore y .= (fftpos(L, Ns[1], CenterFT))
+        ChainRulesCore.@ignore_derivatives y .= (fftpos(L, Ns[1], CenterFT))
     	x = similar(U, real(eltype(U)), (1, Ns[2]))
-    	Zygote.@ignore x .= (fftpos(L, Ns[2], CenterFT))'
+        ChainRulesCore.@ignore_derivatives x .= (fftpos(L, Ns[2], CenterFT))'
         phasefactor = (-1im) .* exp.(1im * k / (2 * z) .* (x.^2 .+ y.^2)) 
         out = phasefactor .* fftshift(p * ifftshift(U)) ./ √(size(U, 1) * size(U, 2))
     end

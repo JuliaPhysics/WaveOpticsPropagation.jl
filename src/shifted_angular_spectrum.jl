@@ -26,7 +26,7 @@ function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, �
 	field_new = padding ? pad(field, pad_factor2) : field
 	
 	# helpful propagation variables
-	(; k, f_x, f_y, x, y) = Zygote.@ignore _propagation_variables(field_new, λ, L_new)
+	(; k, f_x, f_y, x, y) = ChainRulesCore.@ignore_derivatives _propagation_variables(field_new, λ, L_new)
 	
     
     H = exp.(1im .* k .* z .* (sqrt.(CT(1) .- abs2.(f_x .* λ .+ sxy[2]) .- abs2.(f_y .* λ .+ sxy[1]))
@@ -52,9 +52,9 @@ function _prepare_shifted_angular_spectrum(field::AbstractArray{CT}, z, λ, L, �
     shift = txy .* z
 
     ya = similar(field_new, real(eltype(field)), (size(field_new, 1), 1))
-    Zygote.@ignore ya .= (fftpos(L_new[1], size(field_new, 1), CenterFT)) .+ shift[1]
+    ChainRulesCore.@ignore_derivatives ya .= (fftpos(L_new[1], size(field_new, 1), CenterFT)) .+ shift[1]
     xa = similar(field_new, real(eltype(field)), (1, size(field_new, 2)))
-    Zygote.@ignore xa .= (fftpos(L_new[2], size(field_new, 2), CenterFT))' .+ shift[2]
+    ChainRulesCore.@ignore_derivatives xa .= (fftpos(L_new[2], size(field_new, 2), CenterFT))' .+ shift[2]
     
     ramp_before = ifftshift(exp.(1im .* 2 .* T(π) ./ λ .* (sxy[2] .* x .+ sxy[1] .* y)), (1,2))
     ramp_after = ifftshift(exp.(1im .* 2 .* T(π) ./ λ .* (sxy[2] .* xa .+ sxy[1] .* ya)), (1,2))
