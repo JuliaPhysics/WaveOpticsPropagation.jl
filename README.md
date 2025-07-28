@@ -1,4 +1,4 @@
-<a  href="docs/src/assets/RadonKA_logo.png"><img src="docs/logo/logo.png"  width="150"></a>
+<a  href="docs/src/assets/RadonKA_logo.png"><img src="docs/src/assets/logo.png"  width="150"></a>
 
 # WaveOpticsPropagation.jl
 
