@@ -211,10 +211,11 @@ end
 function ChainRulesCore.rrule(sas::ScalableAngularSpectrumOp, ψ::AbstractArray{T}) where T
     field = sas(ψ) 
     function sas_pullback(ȳ)
+        ȳ2 = ChainRulesCore.unthunk(ȳ)
         p = sas.FFTplan
         fill!(sas.buffer2, 0)
 
-        set_center!(sas.buffer2, ȳ)
+        set_center!(sas.buffer2, ȳ2)
         ifftshift!(sas.buffer, sas.buffer2)
 
         if !isnothing(sas.H₂)

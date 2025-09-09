@@ -192,23 +192,22 @@ julia> set_center!(ones((3,3)), [5], broadcast=true)
  1.0  1.0  1.0
 ```
 """
-function set_center!(arr_large::AbstractArray{T, N}, arr_small::AbstractArray{T1, M};
-                     broadcast=false) where {T, T1, M, N}
-    @assert N ≥ M "Can't put a higher dimensional array in a lower dimensional one."
+function set_center!(arr_large, arr_small;
+                     broadcast=false)
 
     if broadcast == false
         inds = ntuple(i -> begin
                         a, b = get_indices_around_center(size(arr_large, i), size(arr_small, i))
                         a:b
                       end,
-                      Val(N)) 
+                      Val(ndims(arr_large))) 
         arr_large[inds..., ..] .= arr_small
     else
         inds = ntuple(i -> begin
                         a, b = get_indices_around_center(size(arr_large, i), size(arr_small, i))
                         a:b
                       end,
-                      Val(M)) 
+                      Val(ndims(arr_small))) 
         arr_large[inds..., ..] .= arr_small
     end
 
@@ -216,22 +215,25 @@ function set_center!(arr_large::AbstractArray{T, N}, arr_small::AbstractArray{T1
     return arr_large
 end
 
+
 function ChainRulesCore.rrule(::typeof(crop_center), arr, new_size::NTuple{N, <:Int}) where N
-    y = crop_center(arr, new_size) 
-    function crop_center_pullback(ȳ)
-        c̄ = pad(ȳ, size(arr), value=zero(eltype(arr)))
+    y = crop_center(arr, new_size)
+    function crop_center_pullback(ȳ)
+        ȳ_unthunked = ChainRulesCore.unthunk(ȳ)
+        c̄ = pad(ȳ_unthunked, size(arr), value=zero(eltype(arr)))
         return NoTangent(), c̄, NoTangent()
     end
     return y, crop_center_pullback
 end
 
-
-function ChainRulesCore.rrule(::typeof(pad), arr, M::Union{NTuple, Number}; value=zero(eltype(arr)))
-    y = pad(arr, M; value=value) 
-    function pad_pullback(ȳ)
-        @assert size(y) == size(ȳ)
-        p̄ = crop_center(ȳ, size(arr))
+function ChainRulesCore.rrule(::typeof(pad), arr, M::Union{NTuple, Number})
+    y = pad(arr, M)
+    function pad_pullback(ȳ)
+        ȳ_unthunked = ChainRulesCore.unthunk(ȳ)
+        @assert size(y) == size(ȳ_unthunked)
+        p̄ = crop_center(ȳ_unthunked, size(arr))
         return NoTangent(), p̄, NoTangent()
     end
     return y, pad_pullback
 end
+

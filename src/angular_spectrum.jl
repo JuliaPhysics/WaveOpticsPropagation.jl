@@ -191,7 +191,7 @@ function ChainRulesCore.rrule(as::AngularSpectrum3, field; crop=true)
         f̄ = NoTangent()
         # i tried to fix this once, but we somehow the Tangent type is missing the dimensionality
         # which we need for set_center! and crop_center
-        y2 = ȳ
+        y2 = ChainRulesCore.unthunk(ȳ)
     
         fill!(as.buffer2, 0)
         fieldp = as.padding ? set_center!(as.buffer2, y2, broadcast=true) : y2 
